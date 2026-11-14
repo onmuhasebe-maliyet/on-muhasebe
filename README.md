@@ -4,7 +4,8 @@ Tarayıcıda çalışan ön muhasebe ve maliyet programı. Kurulum gerektirmez.
 
 ## Özellikler
 - Gider kayıtları (KDV, ödeme durumu, belge no) ve mal maliyet kalemleri (Tek Düzen Hesap Planı 710–780)
-- Ürünler, üretim/satış miktarları, ürün bazında birim maliyet
+- Satış faturaları (müşteri, ürün/hizmet, miktar, fiyat, KDV, tahsilat takibi), ürün ve müşteri bazında satış özeti
+- Ürünler, üretim miktarları, ürün bazında birim maliyet ve kârlılık
 - Gider tablosu (aylık), maliyet tablosu (SMM ve gelir tablosu)
 - Dönem açma/kapama, dönem kapanış raporu, tek tuşla aylık/yıllık devir, yıl devir fişi
 - Çoklu para birimi: TL, USD, EUR, GBP. Dövizli işlemler TCMB döviz **satış** kuruyla TL'ye çevrilir;
