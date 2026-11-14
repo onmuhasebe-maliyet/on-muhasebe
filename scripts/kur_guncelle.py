@@ -15,6 +15,7 @@ import time
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 PARALAR = ["USD", "EUR", "GBP"]
@@ -68,17 +69,31 @@ def main():
     else:
         bas = dt.date(2025, 1, 1)
 
-    yeni = 0
+    # TCMB her dosyayı birkaç saniyede veriyor; günleri paralel indir
+    gunler = []
     gun = bas
     while gun <= bugun:
         if gun.weekday() < 5:          # hafta sonu ilan yok
-            k = getir(gun)
-            if k:
-                if mevcut.get(gun.isoformat()) != k:
-                    yeni += 1
-                mevcut[gun.isoformat()] = k
-            time.sleep(0.15)
+            gunler.append(gun)
         gun += dt.timedelta(days=1)
+
+    yeni = 0
+    hatali = []
+    with ThreadPoolExecutor(max_workers=8) as havuz:
+        isler = {havuz.submit(getir, g): g for g in gunler}
+        for is_ in as_completed(isler):
+            g = isler[is_]
+            try:
+                k = is_.result()
+            except Exception as e:     # tek bir günün hatası tüm işlemi durdurmasın
+                hatali.append(f"{g}: {e}")
+                continue
+            if k:
+                if mevcut.get(g.isoformat()) != k:
+                    yeni += 1
+                mevcut[g.isoformat()] = k
+    if hatali:
+        print(f"{len(hatali)} gün alınamadı:", *hatali[:10], sep="\n  ")
 
     cikti = {
         "kaynak": "TCMB gösterge niteliğindeki döviz satış kurları (ForexSelling) - https://www.tcmb.gov.tr/kurlar/",
