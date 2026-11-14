@@ -1,0 +1,1539 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ön Muhasebe ve Maliyet</title>
+<style>
+:root{
+  --bg:#f4f6f9; --panel:#ffffff; --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+  --brand:#1d4ed8; --brand-ink:#ffffff; --ok:#15803d; --warn:#b45309; --bad:#b91c1c;
+  --soft:#eef2ff; --row:#f9fafb; --hl:#fff7d6;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f141b; --panel:#171e28; --ink:#e5e7eb; --muted:#9ca3af; --line:#2a3442;
+    --brand:#3b82f6; --brand-ink:#ffffff; --ok:#22c55e; --warn:#f59e0b; --bad:#f87171;
+    --soft:#1e293b; --row:#1b2330; --hl:#2c2a1a;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "Segoe UI",system-ui,-apple-system,sans-serif}
+header{background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.top{display:flex;align-items:center;gap:12px;padding:10px 20px;flex-wrap:wrap}
+.top h1{font-size:17px;margin:0}
+.top .firma{color:var(--muted);font-size:13px}
+.top .sp{flex:1}
+.top .ad{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+nav{display:flex;gap:2px;padding:0 14px;overflow-x:auto}
+nav button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 12px;font:inherit;color:var(--muted);cursor:pointer;white-space:nowrap}
+nav button.active{color:var(--brand);border-color:var(--brand);font-weight:600}
+main{max-width:1400px;margin:0 auto;padding:18px 20px 60px}
+section{display:none} section.active{display:block}
+h2{font-size:18px;margin:0 0 12px} h3{font-size:15px;margin:18px 0 8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.kpi .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:22px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.two{grid-template-columns:1fr 1fr} @media(max-width:900px){.two{grid-template-columns:1fr}}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.bar .sp{flex:1}
+button.b,label.b{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:7px 12px;font:inherit;cursor:pointer}
+button.b:hover,label.b:hover{border-color:var(--brand)}
+button.p{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+button.d{color:var(--bad)}
+button.mini{padding:3px 8px;font-size:12px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:7px 9px}
+input[type=number]{text-align:right}
+input:disabled{opacity:.6}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:600;background:var(--row)}
+td.n,th.n{text-align:right}
+tr.grp td{background:var(--soft);font-weight:700}
+tr.sub td{font-weight:600;border-top:2px solid var(--line)}
+tr.tot td{font-weight:700;border-top:2px solid var(--ink);background:var(--row)}
+tr.big td{font-weight:800;font-size:15px}
+tr.aktif td{background:var(--hl)}
+td.ind{padding-left:26px}
+.neg{color:var(--bad)} .pos{color:var(--ok)}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.rz{display:inline-block;padding:1px 9px;border-radius:99px;font-size:11px;font-weight:700;vertical-align:middle}
+.rz.ac{background:#dcfce7;color:#166534} .rz.kap{background:#e5e7eb;color:#374151}
+.st-ok{color:var(--ok);font-weight:600} .st-w{color:var(--warn);font-weight:600}
+.muted{color:var(--muted)}
+.note{background:var(--soft);border-left:4px solid var(--brand);padding:10px 12px;border-radius:6px;margin:10px 0;font-size:13px}
+.note.w{border-color:var(--warn)}
+.chart{display:flex;align-items:flex-end;gap:6px;height:200px;padding-top:10px}
+.chart .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.chart .c i{display:block;width:100%;max-width:38px;background:var(--brand);border-radius:4px 4px 0 0;min-height:2px}
+.chart .c span{font-size:11px;color:var(--muted);margin-top:4px}
+.hb{display:grid;grid-template-columns:160px 1fr 120px;gap:8px;align-items:center;margin:6px 0;font-size:13px}
+.hb .t{background:var(--row);border-radius:4px;height:14px;overflow:hidden}
+.hb .t i{display:block;height:100%}
+dialog{border:1px solid var(--line);border-radius:12px;padding:0;background:var(--panel);color:var(--ink);width:min(640px,94vw)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog form{padding:18px;max-height:88vh;overflow:auto}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.fg label.chk{flex-direction:row;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
+.fg .full{grid-column:1/-1}
+.acts{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.print-head{display:none;margin-bottom:10px}
+dialog.genis{width:min(1150px,96vw)}
+.grid-t th,.grid-t td{padding:3px 4px}
+.grid-t input{padding:5px 6px;border-radius:5px}
+.grid-t tr.err td{background:#fee2e2}
+button.tt{background:#f59e0b;border-color:#f59e0b;color:#1f2937;font-weight:700}
+@media print{
+  header,.no-print,.bar{display:none!important}
+  body{background:#fff;color:#000}
+  .card{border:0;padding:0}
+  main{padding:0}
+  .print-head{display:block!important}
+  body.pr .print-head{display:none!important}
+  body.pr #donemIcerik{display:none!important}
+  h3{break-after:avoid}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>Ön Muhasebe &amp; Maliyet</h1>
+    <span class="firma" id="firmaAd"></span>
+    <span class="sp"></span>
+    <span class="ad">PARA BİRİMİ <select id="paraSec"></select></span>
+    <span class="ad">ÇALIŞMA DÖNEMİ <select id="aktifSec"></select></span>
+    <button class="b p" onclick="yeniDonemAc()" title="Yılını ve ayını seçerek yeni dönem açın">📅 Dönem Aç</button>
+    <button class="b tt" id="ttYillik" onclick="tekTusYillik()" title="Yılı kapatır, stok ve borçları yeni yıla devreder, Ocak dönemini açar">⚡ Yıllık Devir</button>
+  </div>
+  <nav id="nav">
+    <button data-tab="panel" class="active">Panel</button>
+    <button data-tab="donemler">Dönem İşlemleri</button>
+    <button data-tab="giderler">Gider Kayıtları</button>
+    <button data-tab="kalemler">Mal Maliyet Kalemleri</button>
+    <button data-tab="uretim">Ürünler &amp; Üretim</button>
+    <button data-tab="gidertablo">Gider Tablosu</button>
+    <button data-tab="maliyet">Maliyet Tablosu</button>
+    <button data-tab="ayarlar">Ayarlar</button>
+  </nav>
+</header>
+
+<main>
+  <div class="print-head" id="printHead"></div>
+
+  <section id="panel" class="active"></section>
+
+  <section id="donemler">
+    <div id="donemIcerik"></div>
+    <div id="raporAlan"></div>
+  </section>
+
+  <section id="giderler">
+    <div class="bar">
+      <h2 style="margin:0">Gider Kayıtları</h2><span class="sp"></span>
+      <button class="b p" onclick="giderForm()">+ Yeni Gider</button>
+      <button class="b" onclick="toplu('gider')">Toplu Giriş / Excel'den Yükle</button>
+      <button class="b" onclick="sabitKopyala()" title="Bir önceki dönemin sabit giderlerini çalışma dönemine kopyalar">Geçen dönemin sabit giderlerini kopyala</button>
+      <button class="b" onclick="csv('tblGider','gider-kayitlari')">Excel (CSV)</button>
+    </div>
+    <div class="bar">
+      <select id="fDonem"></select>
+      <select id="fGrup"></select>
+      <select id="fKalem"></select>
+      <select id="fOdeme"><option value="">Tüm durumlar</option><option value="odendi">Ödendi</option><option value="bekliyor">Bekliyor</option></select>
+      <input id="fAra" placeholder="Açıklama / belge ara…">
+    </div>
+    <div class="card tw" id="giderListe"></div>
+  </section>
+
+  <section id="kalemler">
+    <div class="bar">
+      <h2 style="margin:0">Mal Maliyet Kalemleri</h2><span class="sp"></span>
+      <button class="b p" onclick="kalemForm()">+ Yeni Mal Maliyet Kalemi</button>
+      <button class="b" onclick="toplu('kalem')">Toplu Giriş / Excel'den Yükle</button>
+    </div>
+    <div class="note">Her mal maliyet kalemi bir maliyet grubuna bağlıdır (Tek Düzen Hesap Planı 7/A). Üretim grupları (710, 720, 730) ürün maliyetine, diğerleri dönem/faaliyet giderlerine gider.</div>
+    <div class="card tw" id="kalemListe"></div>
+  </section>
+
+  <section id="uretim">
+    <div class="bar">
+      <h2 style="margin:0">Ürünler &amp; Üretim</h2><span class="sp"></span>
+      <button class="b p" onclick="urunForm()">+ Yeni Ürün</button>
+      <button class="b" onclick="toplu('urun')">Toplu Ürün Girişi / Excel</button>
+    </div>
+    <div class="card tw" id="urunListe"></div>
+    <div class="card">
+      <div class="bar"><h3 style="margin:0">Dönem Üretim ve Satış Bilgileri</h3><span class="sp"></span><button class="b" onclick="toplu('uretim')">Toplu Giriş / Excel</button><select id="uDonem"></select></div>
+      <div id="uKilit"></div>
+      <div class="note">Üretim maliyetleri ürünlere <b>üretim miktarı × maliyet katsayısı</b> oranında, faaliyet giderleri <b>satış hasılatı</b> oranında dağıtılır. Bir gideri doğrudan bir ürüne bağlamak için gider kaydında ürün seçin.</div>
+      <div class="tw" id="uretimTablo"></div>
+      <h3>Mamul Stokları (TL)</h3>
+      <div class="fg" style="max-width:520px">
+        <label>Dönem başı mamul stoku (önceki dönemden devir)<input type="number" step="0.01" id="stBasi"></label>
+        <label>Dönem sonu mamul stoku<input type="number" step="0.01" id="stSonu"></label>
+      </div>
+    </div>
+  </section>
+
+  <section id="gidertablo">
+    <div class="bar">
+      <h2 style="margin:0">Gider Tablosu</h2><span class="sp"></span>
+      <select id="gtYil"></select>
+      <label class="b"><input type="checkbox" id="gtKdv"> KDV dahil</label>
+      <button class="b" onclick="csv('tblGT','gider-tablosu')">Excel (CSV)</button>
+      <button class="b" onclick="yazdir()">Yazdır / PDF</button>
+    </div>
+    <div class="card tw" id="gtIcerik"></div>
+    <div class="grid two">
+      <div class="card" id="gtSabit"></div>
+      <div class="card" id="gtGrup"></div>
+    </div>
+  </section>
+
+  <section id="maliyet">
+    <div class="bar">
+      <h2 style="margin:0">Maliyet Tablosu</h2><span class="sp"></span>
+      <select id="mDonem"></select>
+      <button class="b" onclick="csv('tblSMM','maliyet-ozet');csv('tblUrunMal','urun-maliyet')">Excel (CSV)</button>
+      <button class="b" onclick="yazdir()">Yazdır / PDF</button>
+    </div>
+    <div id="mIcerik"></div>
+  </section>
+
+  <section id="ayarlar">
+    <h2>Ayarlar</h2>
+    <div class="card">
+      <h3 style="margin-top:0">Firma Bilgileri</h3>
+      <div class="fg" style="max-width:640px">
+        <label>Firma unvanı<input id="aAd"></label>
+        <label>Vergi dairesi / No<input id="aVkn"></label>
+        <label class="full">Adres<input id="aAdres"></label>
+      </div>
+      <div class="acts" style="justify-content:flex-start"><button class="b p" onclick="firmaKaydet()">Kaydet</button></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Yedekleme</h3>
+      <p class="muted">Veriler bu bilgisayarda, tarayıcının hafızasında tutulur. Düzenli olarak (özellikle dönem kapanışı ve yıl devrinden önce) yedek almanız önerilir.</p>
+      <div class="bar">
+        <button class="b" onclick="yedekAl()">Yedek indir (.json)</button>
+        <label class="b">Yedekten geri yükle<input type="file" accept=".json" hidden onchange="yedekYukle(this)"></label>
+      </div>
+      <h3>Döviz Kurları (TCMB döviz satış kuru)</h3>
+      <div id="kurBilgi"></div>
+      <div class="fg" style="max-width:640px;margin:10px 0">
+        <label class="full">Dövizli işlemlerde kullanılacak kur
+          <select id="kurGunu">
+            <option value="onceki">İşlem tarihinden önceki iş günü TCMB'nin ilan ettiği satış kuru (fatura günü geçerli kur)</option>
+            <option value="ayni">İşlem tarihinde TCMB'nin ilan ettiği satış kuru (yoksa önceki iş günü)</option>
+          </select></label>
+      </div>
+      <div class="bar">
+        <button class="b" onclick="kurlarGetir(false).then(n=>{ if(n){ yenile(); bildir(n+' günlük TCMB kuru yüklendi.'); } })">Kurları güncelle</button>
+        <button class="b" onclick="kurlariUygula()">Açık dönemlerdeki dövizli kayıtlara TCMB kurunu uygula</button>
+      </div>
+      <h3>Deneme</h3>
+      <div class="bar">
+        <button class="b" onclick="demoYukle()">Örnek veri yükle</button>
+        <button class="b d" onclick="hepsiniSil()">Tüm verileri sil</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="dlg"><form method="dialog" id="dlgForm"></form></dialog>
+
+<script>
+/* ================== SABİTLER ================== */
+const LS_KEY = 'onmuhasebe_v1';
+const AY = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+const AY_UZUN = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const GRUPLAR = {
+  DIMM:{ad:'Direkt İlk Madde ve Malzeme Giderleri', kisa:'Direkt Malzeme', kod:'710', uretim:true,  renk:'#2563eb'},
+  DIIG:{ad:'Direkt İşçilik Giderleri',              kisa:'Direkt İşçilik', kod:'720', uretim:true,  renk:'#7c3aed'},
+  GUG: {ad:'Genel Üretim Giderleri',                kisa:'Genel Üretim',   kod:'730', uretim:true,  renk:'#0891b2'},
+  ARGE:{ad:'Araştırma ve Geliştirme Giderleri',     kisa:'Ar-Ge',          kod:'750', uretim:false, renk:'#16a34a'},
+  PAZ: {ad:'Pazarlama, Satış ve Dağıtım Giderleri', kisa:'Pazarlama',      kod:'760', uretim:false, renk:'#ea580c'},
+  GYG: {ad:'Genel Yönetim Giderleri',               kisa:'Genel Yönetim',  kod:'770', uretim:false, renk:'#db2777'},
+  FIN: {ad:'Finansman Giderleri',                   kisa:'Finansman',      kod:'780', uretim:false, renk:'#64748b'}
+};
+const DEF_KALEM = [
+  ['Hammadde','DIMM','degisken'],['Yardımcı malzeme','DIMM','degisken'],['Ambalaj malzemesi','DIMM','degisken'],
+  ['Üretim işçi ücretleri','DIIG','degisken'],['Üretim işçi SGK primi','DIIG','degisken'],
+  ['Fabrika kirası','GUG','sabit'],['Elektrik','GUG','degisken'],['Doğalgaz','GUG','degisken'],['Su','GUG','degisken'],
+  ['Makine bakım-onarım','GUG','degisken'],['Amortisman (üretim)','GUG','sabit'],['Usta/ustabaşı maaşı','GUG','sabit'],
+  ['Ar-Ge harcamaları','ARGE','sabit'],
+  ['Nakliye / sevkiyat','PAZ','degisken'],['Reklam ve tanıtım','PAZ','sabit'],['Satış personeli maaşı','PAZ','sabit'],['Satış komisyonu','PAZ','degisken'],
+  ['Ofis kirası','GYG','sabit'],['İdari personel maaşı','GYG','sabit'],['Mali müşavir ücreti','GYG','sabit'],
+  ['Telefon / internet','GYG','sabit'],['Kırtasiye / ofis','GYG','degisken'],['Sigorta','GYG','sabit'],['Araç yakıt','GYG','degisken'],
+  ['Banka komisyonu','FIN','degisken'],['Kredi faizi','FIN','sabit']
+];
+
+/* ================== YARDIMCILAR ================== */
+const $ = id => document.getElementById(id);
+const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+const NUM = new Intl.NumberFormat('tr-TR',{maximumFractionDigits:2});
+const KURF = new Intl.NumberFormat('tr-TR',{minimumFractionDigits:4,maximumFractionDigits:4});
+
+/* ---- Para birimleri ---- */
+const PARA = {TRY:{ad:'Türk Lirası', s:'₺'}, USD:{ad:'ABD Doları', s:'$'}, EUR:{ad:'Euro', s:'€'}, GBP:{ad:'İngiliz Sterlini', s:'£'}};
+const GORUNUM = {TUM:'Tümü (TL karşılığı)', TRY:'Yalnız TL işlemleri', USD:'Yalnız USD ($) işlemleri', EUR:'Yalnız EUR (€) işlemleri', GBP:'Yalnız GBP (£) işlemleri'};
+const FMTC = {};
+const fmtP = (n, p='TRY') => (FMTC[p] ||= new Intl.NumberFormat('tr-TR',{style:'currency',currency:p,minimumFractionDigits:2,maximumFractionDigits:2})).format(Number.isFinite(n) ? n : 0);
+const gor = () => (S && S.gorunum) || 'TUM';                     // sorgu/rapor para görünümü
+const gorPara = () => gor()==='TUM' ? 'TRY' : gor();             // gösterim para birimi
+const gorAd = () => gor()==='TUM' ? 'TL karşılığı (döviz işlemleri TCMB satış kuruyla)' : `${PARA[gor()].ad} (${PARA[gor()].s}) işlemleri`;
+const fmt = n => fmtP(n, gorPara());
+const paraOf = g => g.para || 'TRY';
+const dahil = g => gor()==='TUM' || paraOf(g)===gor();
+const G = () => S.giderler.filter(dahil);                         // görünüme giren gider kayıtları
+const tlKarsilik = g => (+g.tutar||0) * (paraOf(g)==='TRY' ? 1 : (+g.kur||0));
+const brutTL = g => tlKarsilik(g) * (1 + (+g.kdv||0)/100);
+const gT = g => gor()==='TUM' ? tlKarsilik(g) : (+g.tutar||0);   // görünüm tutarı (KDV hariç)
+function paraIle(p, fn){ const eski = S.gorunum; S.gorunum = p; try { return fn(); } finally { S.gorunum = eski; } }
+function paraBul(v){
+  const n = String(v ?? '').trim().toLocaleLowerCase('tr');
+  if(!n) return 'TRY';
+  if(['tl','try','₺','türk lirası','turk lirasi','lira'].includes(n)) return 'TRY';
+  if(['usd','$','dolar','abd doları','us dollar','amerikan doları'].includes(n)) return 'USD';
+  if(['eur','€','euro','avro'].includes(n)) return 'EUR';
+  if(['gbp','£','sterlin','pound','ingiliz sterlini','i̇ngiliz sterlini'].includes(n)) return 'GBP';
+  return null;
+}
+const paraOptions = sel => Object.entries(PARA).map(([k,P])=>`<option value="${k}" ${k===sel?'selected':''}>${k} ${P.s}</option>`).join('');
+
+/* ---- TCMB döviz satış kurları ---- */
+const LS_KUR = 'onmuhasebe_kurlar_v1';
+let KURLAR = {}, KUR_GUNCEL = '';
+const gunEkle = (t, n) => { const d = new Date(t+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
+function kurlarYukle(){ try { const d = JSON.parse(localStorage.getItem(LS_KUR)); if(d){ KURLAR = d.kurlar||{}; KUR_GUNCEL = d.guncelleme||''; } } catch(e){} }
+async function kurlarGetir(sessiz){
+  try {
+    const r = await fetch('kurlar.json', {cache:'no-store'}); if(!r.ok) throw 0;
+    const d = await r.json();
+    Object.assign(KURLAR, d.kurlar || {}); KUR_GUNCEL = d.guncelleme || '';
+    try { localStorage.setItem(LS_KUR, JSON.stringify({kurlar:KURLAR, guncelleme:KUR_GUNCEL})); } catch(e){}
+    return Object.keys(d.kurlar || {}).length;
+  } catch(e){
+    if(!sessiz) alert('TCMB kur dosyası (kurlar.json) alınamadı. Program internetten (GitHub Pages) açıldığında kurlar otomatik gelir; dosyayı bilgisayardan çift tıklayarak açtıysanız kurları elle girebilirsiniz.');
+    return 0;
+  }
+}
+/* İşlem tarihine göre TCMB döviz satış kuru. ayar 'onceki': işlem gününden önceki iş günü ilan edilen kur; 'ayni': işlem günü ilan edilen kur (yoksa önceki). */
+function kurBul(tarih, para, ayniGun){
+  if(!para || para==='TRY') return {kur:1, tarih};
+  let t = (ayniGun || S.ayar?.kurGunu==='ayni') ? tarih : gunEkle(tarih,-1);
+  for(let i=0; i<20; i++){ const k = KURLAR[t]?.[para]; if(k) return {kur:+k, tarih:t}; t = gunEkle(t,-1); }
+  return null;
+}
+const pct = n => Number.isFinite(n) ? '%' + NUM.format(n*100) : '—';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sum = a => a.reduce((x,y)=>x+(+y||0),0);
+const pad = n => String(n).padStart(2,'0');
+const bugun = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const buAy = () => bugun().slice(0,7);
+const tarihTR = t => t ? t.split('-').reverse().join('.') : '';
+const kalem = id => S.kalemler.find(k=>k.id===id);
+const urun = id => S.urunler.find(u=>u.id===id);
+const kdvTutar = g => gT(g) * (+g.kdv||0) / 100;
+const brut = g => gT(g) + kdvTutar(g);
+const tag = g => `<span class="tag" style="background:${GRUPLAR[g].renk}">${GRUPLAR[g].kod}</span>`;
+const sinif = n => n < 0 ? 'neg' : '';
+const donemAd = p => p.length === 4 ? `${p} Yılı` : `${AY_UZUN[+p.slice(5,7)-1]} ${p.slice(0,4)}`;
+const ayEkle = (k,n) => { let [y,m]=k.split('-').map(Number); m+=n; while(m>12){m-=12;y++} while(m<1){m+=12;y--} return `${y}-${pad(m)}`; };
+const ayinSonGunu = k => new Date(+k.slice(0,4), +k.slice(5,7), 0).getDate();
+
+/* ================== VERİ ================== */
+let S;
+const UI = {f:'', m:'', u:'', gy:''};   // ekranlardaki dönem seçimleri
+
+function yeniVeri(){
+  return {firma:{ad:'Firmam',vkn:'',adres:''}, kalemler:DEF_KALEM.map(([ad,grup,tip])=>({id:uid(),ad,grup,tip})),
+          giderler:[], urunler:[], uretim:{}, stok:{},
+          donemler:[{kod:buAy(), durum:'acik', acilis:bugun()}], yilDurum:{}, devirler:{}, aktif:buAy()};
+}
+function normalize(){
+  ['giderler','urunler','donemler'].forEach(k=>S[k] ||= []);
+  S.uretim ||= {}; S.stok ||= {}; S.yilDurum ||= {}; S.devirler ||= {};
+  S.ayar ||= {}; S.ayar.kurGunu ||= 'onceki'; S.gorunum ||= 'TUM';
+  if(!S.donemler.length){
+    // Eski sürümden geçiş: kayıtların bulunduğu aylardan dönemleri oluştur
+    const aylar = [buAy(), ...S.giderler.map(g=>g.tarih.slice(0,7)), ...Object.keys(S.uretim)].sort();
+    for(let k=aylar[0]; k<=aylar[aylar.length-1]; k=ayEkle(k,1)) donemEkle(k);
+  }
+  if(!donem(S.aktif)) S.aktif = (sirali().filter(d=>d.durum==='acik').pop() || sirali().pop()).kod;
+  UI.f = UI.m = UI.u = S.aktif; UI.gy = S.aktif.slice(0,4);
+}
+function yukle(){
+  try { S = JSON.parse(localStorage.getItem(LS_KEY)); } catch(e){ S = null; }
+  if(!S || !S.kalemler) S = yeniVeri();
+  normalize();
+}
+function kaydet(){
+  try { localStorage.setItem(LS_KEY, JSON.stringify(S)); }
+  catch(e){ alert('Veri kaydedilemedi! Tarayıcı depolaması kapalı olabilir. Lütfen yedek alın.'); }
+}
+
+/* ================== DÖNEM YARDIMCILARI ================== */
+const donem = k => S.donemler.find(d=>d.kod===k);
+const sirali = () => [...S.donemler].sort((a,b)=>a.kod.localeCompare(b.kod));
+const acik = t => { const d = donem(String(t).slice(0,7)); return !!d && d.durum==='acik'; };
+const yilKapali = y => S.yilDurum[y]?.durum === 'devredildi';
+const yillar = () => [...new Set(S.donemler.map(d=>d.kod.slice(0,4)))].sort().reverse();
+function donemEkle(k){ if(!donem(k)) S.donemler.push({kod:k, durum:'acik', acilis:bugun()}); }
+const durumRozet = k => donem(k)?.durum==='kapali' ? '<span class="rz kap">🔒 Kapalı</span>' : '<span class="rz ac">Açık</span>';
+
+function donemOptions(sel, {tumu=false, yil=true}={}){
+  let h = tumu ? `<option value="" ${sel===''?'selected':''}>Tüm dönemler</option>` : '';
+  yillar().forEach(y=>{
+    h += `<optgroup label="${y}${yilKapali(y)?' (devredildi)':''}">`;
+    if(yil) h += `<option value="${y}" ${sel===y?'selected':''}>${y} — Tüm Yıl</option>`;
+    sirali().filter(d=>d.kod.startsWith(y)).forEach(d=>
+      h += `<option value="${d.kod}" ${sel===d.kod?'selected':''}>${donemAd(d.kod)}${d.durum==='kapali'?' 🔒':''}</option>`);
+    h += `</optgroup>`;
+  });
+  return h;
+}
+function kalemOptions(sel){
+  return Object.entries(GRUPLAR).map(([g,G])=>{
+    const ks = S.kalemler.filter(k=>k.grup===g); if(!ks.length) return '';
+    return `<optgroup label="${G.kod} ${G.kisa}">${ks.map(k=>`<option value="${k.id}" ${k.id===sel?'selected':''}>${esc(k.ad)}</option>`).join('')}</optgroup>`;
+  }).join('');
+}
+
+/* Üretim bilgisi: aylık girilir, yıllık seçildiğinde aylar toplanır */
+/* Satış fiyatının kuru: elle girilmişse o, yoksa ay sonundaki TCMB satış kuru */
+function satisKuru(ay, d){
+  const para = d.para || 'TRY'; if(para==='TRY') return 1;
+  if(+d.kur > 0) return +d.kur;
+  return kurBul(`${ay}-${pad(ayinSonGunu(ay))}`, para, true)?.kur || 0;
+}
+/* Fiyatın görünümdeki karşılığı: TL görünümünde kurla çevrilir, döviz görünümünde yalnız o dövizdeki fiyatlar alınır */
+function fiyatCv(ay, d){
+  const para = d.para || 'TRY', f = +d.fiyat || 0;
+  if(gor()==='TUM') return f * satisKuru(ay, d);
+  return para===gor() ? f : 0;
+}
+function getUretim(p){
+  const out = {};
+  Object.entries(S.uretim).filter(([k])=>k.startsWith(p)).forEach(([ay,v])=>{
+    Object.entries(v).forEach(([uid_,d])=>{
+      const o = out[uid_] ||= {uretilen:0,satilan:0,hasilat:0,sonFiyat:0};
+      const f = fiyatCv(ay, d);
+      o.uretilen += +d.uretilen||0; o.satilan += +d.satilan||0; o.hasilat += (+d.satilan||0)*f; if(f) o.sonFiyat = f;
+    });
+  });
+  Object.values(out).forEach(o=>o.fiyat = o.satilan && o.hasilat ? o.hasilat/o.satilan : o.sonFiyat);
+  return out;
+}
+function getStok(p){
+  if(!['TUM','TRY'].includes(gor())) return {basi:0,sonu:0};   // mamul stokları TL tutulur
+  if(p.length === 7) return S.stok[p] || {basi:0,sonu:0};
+  const ks = Object.keys(S.stok).filter(k=>k.startsWith(p)).sort();
+  if(!ks.length) return {basi:0,sonu:0};
+  return {basi:+S.stok[ks[0]].basi||0, sonu:+S.stok[ks[ks.length-1]].sonu||0};
+}
+
+/* ================== MALİYET HESABI ================== */
+function hesapla(p){
+  const gs = G().filter(g=>g.tarih.startsWith(p));
+  const ur = getUretim(p);
+  const R = {grup:{}, kalem:{}, urun:{}, dagitilamayan:{uretim:0, faaliyet:0}};
+  Object.keys(GRUPLAR).forEach(g=>R.grup[g]=0);
+  S.urunler.forEach(u=>{
+    const d = ur[u.id] || {};
+    const x = R.urun[u.id] = {uretilen:+d.uretilen||0, satilan:+d.satilan||0, fiyat:+d.fiyat||0, DIMM:0, DIIG:0, GUG:0, faaliyet:0};
+    x.hasilat = x.satilan * x.fiyat;
+    x.agirlik = x.uretilen * (+u.katsayi || 1);
+  });
+  const U = Object.values(R.urun);
+  const topUret = sum(U.map(x=>x.uretilen)), topAg = sum(U.map(x=>x.agirlik));
+  const topHas = sum(U.map(x=>x.hasilat)), topSat = sum(U.map(x=>x.satilan));
+
+  gs.forEach(g=>{
+    const k = kalem(g.kalemId); if(!k) return;
+    const t = gT(g), grp = k.grup, G = GRUPLAR[grp];
+    R.grup[grp] += t;
+    R.kalem[k.id] = (R.kalem[k.id]||0) + t;
+    const direkt = g.urunId && R.urun[g.urunId];
+    if(G.uretim){
+      if(direkt) R.urun[g.urunId][grp] += t;
+      else if(topAg > 0) U.forEach(x=>x[grp] += t * x.agirlik / topAg);
+      else R.dagitilamayan.uretim += t;
+    } else {
+      if(direkt) R.urun[g.urunId].faaliyet += t;
+      else if(topHas > 0) U.forEach(x=>x.faaliyet += t * x.hasilat / topHas);
+      else if(topSat > 0) U.forEach(x=>x.faaliyet += t * x.satilan / topSat);
+      else if(topUret > 0) U.forEach(x=>x.faaliyet += t * x.uretilen / topUret);
+      else R.dagitilamayan.faaliyet += t;
+    }
+  });
+  U.forEach(x=>{
+    x.uretimMal = x.DIMM + x.DIIG + x.GUG;
+    x.birim = x.uretilen ? x.uretimMal / x.uretilen : 0;
+    const bolen = x.satilan || x.uretilen;
+    x.birimFaal = bolen ? x.faaliyet / bolen : 0;
+    x.tamBirim = x.birim + x.birimFaal;
+    x.birimKar = x.fiyat ? x.fiyat - x.tamBirim : 0;
+    x.marj = x.fiyat ? x.birimKar / x.fiyat : NaN;
+  });
+  const st = getStok(p);
+  R.stok = st;
+  R.uretimMal = R.grup.DIMM + R.grup.DIIG + R.grup.GUG;
+  R.smm = R.uretimMal + (+st.basi||0) - (+st.sonu||0);
+  R.netSatis = topHas;
+  R.brutKar = R.netSatis - R.smm;
+  R.faaliyet = R.grup.ARGE + R.grup.PAZ + R.grup.GYG;
+  R.faalKar = R.brutKar - R.faaliyet;
+  R.netKar = R.faalKar - R.grup.FIN;
+  R.toplamGider = sum(Object.values(R.grup));
+  R.toplamUretim = topUret;
+  return R;
+}
+function ozet(p){
+  const gs = G().filter(g=>g.tarih.startsWith(p)), R = hesapla(p);
+  return {kayit:gs.length, gider:R.toplamGider, kdv:sum(gs.map(kdvTutar)), uretimMal:R.uretimMal, smm:R.smm,
+          netSatis:R.netSatis, netKar:R.netKar, bekleyen:sum(gs.filter(g=>g.odeme==='bekliyor').map(brut)),
+          stokBasi:+R.stok.basi||0, stokSonu:+R.stok.sonu||0};
+}
+const ozetTablo = o => `<table>
+  <tr><td>Gider kaydı sayısı</td><td class="n">${o.kayit}</td></tr>
+  <tr><td>Toplam gider (KDV hariç)</td><td class="n">${fmt(o.gider)}</td></tr>
+  <tr><td>İndirilecek KDV</td><td class="n">${fmt(o.kdv)}</td></tr>
+  <tr><td>Dönem üretim maliyeti</td><td class="n">${fmt(o.uretimMal)}</td></tr>
+  <tr><td>Dönem başı / sonu mamul stoku</td><td class="n">${fmt(o.stokBasi)} / ${fmt(o.stokSonu)}</td></tr>
+  <tr><td>Satılan mamul maliyeti</td><td class="n">${fmt(o.smm)}</td></tr>
+  <tr><td>Net satışlar</td><td class="n">${fmt(o.netSatis)}</td></tr>
+  <tr class="tot"><td>Dönem kârı / zararı</td><td class="n ${sinif(o.netKar)}">${fmt(o.netKar)}</td></tr>
+  <tr><td>Ödenmemiş giderler (KDV dahil)</td><td class="n">${fmt(o.bekleyen)}</td></tr></table>`;
+function uyarilar(p){
+  const R = hesapla(p); let h = '';
+  if(R.dagitilamayan.uretim) h += `<div class="note w">${fmt(R.dagitilamayan.uretim)} tutarındaki üretim gideri ürünlere dağıtılamadı, çünkü bu dönem için <b>üretim miktarı</b> girilmemiş. (Ürünler &amp; Üretim sekmesi)</div>`;
+  if(R.dagitilamayan.faaliyet) h += `<div class="note w">${fmt(R.dagitilamayan.faaliyet)} tutarındaki faaliyet gideri ürünlere dağıtılamadı (satış/üretim bilgisi yok).</div>`;
+  if(p.length===7 && R.uretimMal && !S.stok[p]) h += `<div class="note w">Bu dönem için mamul stok bilgisi girilmemiş; dönem başı ve sonu stok 0 kabul edildi.</div>`;
+  return h;
+}
+
+/* ================== PANEL ================== */
+function renderPanel(){
+  const a = S.aktif, y = a.slice(0,4);
+  const yg = G().filter(g=>g.tarih.startsWith(y));
+  const ag = yg.filter(g=>g.tarih.startsWith(a));
+  const bekleyen = G().filter(g=>g.odeme==='bekliyor');
+  const devreden = bekleyen.filter(g=>g.tarih.slice(0,4) < y);
+  const aylik = AY.map((_,i)=>sum(yg.filter(g=>g.tarih.slice(5,7)===pad(i+1)).map(gT)));
+  const mx = Math.max(...aylik, 1);
+  const R = hesapla(y);
+  const gmx = Math.max(...Object.values(R.grup), 1);
+  const son = [...G()].sort((a,b)=>b.tarih.localeCompare(a.tarih)).slice(0,8);
+  const sonDonem = sirali().pop().kod, dv = S.devirler[y];
+  const tumYil = S.giderler.filter(g=>g.tarih.startsWith(y));
+  const paraOzet = Object.keys(PARA).map(p=>{ const l = tumYil.filter(g=>paraOf(g)===p); return {p, n:l.length, tutar:sum(l.map(g=>+g.tutar||0)), tl:sum(l.map(tlKarsilik))}; }).filter(x=>x.n);
+
+  $('panel').innerHTML = `
+  <h2>Genel Bakış — ${y} &nbsp;<span class="muted" style="font-size:14px;font-weight:400">Çalışma dönemi: ${donemAd(a)} ${durumRozet(a)} · Görünüm: ${gorAd()}</span></h2>
+  ${buAy() > sonDonem ? `<div class="note w">Takvimde <b>${donemAd(buAy())}</b> ayındasınız ama son açılmış dönem <b>${donemAd(sonDonem)}</b>. <a href="#" onclick="sekmeyeGit('donemler');return false">Dönem İşlemleri</a> ekranından yeni dönem açın.</div>`:''}
+  ${!S.giderler.length ? `<div class="note">Henüz gider kaydı yok. <b>Gider Kayıtları</b> sekmesinden ekleyebilir ya da <b>Ayarlar → Örnek veri yükle</b> ile programı deneyebilirsiniz.</div>`:''}
+  ${dv ? `<div class="note">${dv.kaynakYil} yılından devir: mamul stoku <b>${fmtP(dv.mamulStok)}</b>, ödenmemiş borçlar <b>${fmtP(dv.bekleyenToplam)}</b> (TL karşılığı, ${tarihTR(dv.tarih)} tarihinde devredildi).</div>`:''}
+  <div class="grid kpis">
+    <div class="card kpi"><div class="l">${donemAd(a)} gider (KDV hariç)</div><div class="v">${fmt(sum(ag.map(gT)))}</div></div>
+    <div class="card kpi"><div class="l">${y} toplam gider</div><div class="v">${fmt(sum(yg.map(gT)))}</div></div>
+    <div class="card kpi"><div class="l">${y} indirilecek KDV</div><div class="v">${fmt(sum(yg.map(kdvTutar)))}</div></div>
+    <div class="card kpi"><div class="l">Ödenmemiş giderler (${bekleyen.length})</div><div class="v ${bekleyen.length?'neg':''}">${fmt(sum(bekleyen.map(brut)))}</div>
+      ${devreden.length?`<div class="muted" style="font-size:12px">${fmt(sum(devreden.map(brut)))} önceki yıllardan devreden</div>`:''}</div>
+    <div class="card kpi"><div class="l">${y} net satış</div><div class="v">${fmt(R.netSatis)}</div></div>
+    <div class="card kpi"><div class="l">${y} net kâr / zarar</div><div class="v ${R.netKar<0?'neg':'pos'}">${fmt(R.netKar)}</div></div>
+  </div>
+  ${paraOzet.length ? `<div class="card tw"><h3 style="margin-top:0">${y} — Para birimlerine göre giderler (KDV hariç)</h3>
+    <table><tr><th>Para birimi</th><th class="n">Kayıt</th><th class="n">Döviz tutarı</th><th class="n">TL karşılığı (TCMB satış kuru)</th><th class="n">Ortalama kur</th><th></th></tr>
+    ${paraOzet.map(x=>`<tr><td><b>${x.p}</b> ${PARA[x.p].ad}</td><td class="n">${x.n}</td><td class="n">${fmtP(x.tutar,x.p)}</td><td class="n">${fmtP(x.tl)}</td>
+      <td class="n">${x.p==='TRY'?'—':KURF.format(x.tl/(x.tutar||1))}</td><td><button class="b mini" onclick="gorunumSec('${x.p}')">Yalnız ${x.p} göster</button></td></tr>`).join('')}
+    <tr class="tot"><td>TOPLAM (TL)</td><td class="n">${sum(paraOzet.map(x=>x.n))}</td><td></td><td class="n">${fmtP(sum(paraOzet.map(x=>x.tl)))}</td><td></td><td>${gor()!=='TUM'?`<button class="b mini" onclick="gorunumSec('TUM')">Tümünü göster</button>`:''}</td></tr></table></div>`:''}
+  <div class="grid two">
+    <div class="card"><h3 style="margin-top:0">Aylık giderler — ${y}</h3>
+      <div class="chart">${aylik.map((v,i)=>`<div class="c" title="${AY_UZUN[i]}: ${fmt(v)}"><i style="height:${v/mx*100}%"></i><span>${AY[i]}</span></div>`).join('')}</div>
+    </div>
+    <div class="card"><h3 style="margin-top:0">Maliyet gruplarına göre dağılım — ${y}</h3>
+      ${Object.entries(GRUPLAR).map(([g,G])=>`<div class="hb"><span>${G.kod} ${G.kisa}</span><div class="t"><i style="width:${R.grup[g]/gmx*100}%;background:${G.renk}"></i></div><b style="text-align:right">${fmt(R.grup[g])}</b></div>`).join('')}
+    </div>
+  </div>
+  <div class="card tw"><h3 style="margin-top:0">Son gider kayıtları</h3>
+    <table><tr><th>Tarih</th><th>Mal Maliyet Kalemi</th><th>Açıklama</th><th class="n">Döviz tutarı</th><th class="n">Toplam (KDV dahil)</th><th>Durum</th></tr>
+    ${son.map(g=>`<tr><td>${tarihTR(g.tarih)}</td><td>${esc(kalem(g.kalemId)?.ad||'?')}</td><td>${esc(g.aciklama)}</td><td class="n">${paraOf(g)==='TRY'?'':fmtP(+g.tutar, paraOf(g))}</td><td class="n">${fmt(brut(g))}</td><td>${durum(g)}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">Kayıt yok</td></tr>'}
+    </table></div>`;
+}
+const durum = g => g.odeme==='bekliyor' ? '<span class="st-w">Bekliyor</span>' : '<span class="st-ok">Ödendi</span>';
+
+/* ================== DÖNEM İŞLEMLERİ ================== */
+function renderDonemler(){
+  const ds = sirali(), son = ds[ds.length-1], yeni = ayEkle(son.kod,1), sonYil = son.kod.slice(0,4);
+  const yilGecis = yeni.slice(0,4) !== sonYil && !yilKapali(sonYil);
+  const once = ayEkle(ds[0].kod,-1);
+  let h = `<div class="card"><div class="bar" style="margin:0">
+    <div><div class="muted" style="font-size:12px">ÇALIŞMA DÖNEMİ</div><div style="font-size:20px;font-weight:700">${donemAd(S.aktif)} ${durumRozet(S.aktif)}</div></div>
+    <span class="sp"></span>
+    <button class="b p" onclick="yeniDonemAc()">📅 Dönem Aç</button>
+    <button class="b tt" onclick="tekTusAylik()">⚡ Tek Tuş Aylık Devir${yilGecis?'':' → '+donemAd(yeni)}</button>
+    <button class="b tt" onclick="tekTusYillik()">⚡ Tek Tuş Yıllık Devir</button>
+    ${yilGecis ? `<button class="b" onclick="yilDevriSihirbaz('${sonYil}')">Yıl Devri (ayrıntılı): ${sonYil} → ${+sonYil+1}</button>` : ''}
+    ${!yilKapali(once.slice(0,4)) ? `<button class="b" onclick="geriyeDonemEkle()" title="Programa geçmiş aylardan başlamak için">Geriye dönem ekle (${donemAd(once)})</button>`:''}
+  </div>
+  <p class="muted" style="margin:10px 0 0;font-size:12px"><b>📅 Dönem Aç:</b> açmak istediğiniz yılı ve ayı kendiniz seçersiniz (örn. Ocak 2027, Şubat 2027); önceki dönemi kapatma, raporunu alma, stok devri ve sabit gider kopyalama seçenekleri aynı pencerededir.
+  <b>⚡ Tek tuş aylık devir:</b> son dönemi (ve önceki açık dönemleri) kapatır, kapanış raporunu verir, dönem sonu stokunu devreder ve sonraki ayı açar. Aralık'tan sonra otomatik olarak yıl devri yapar.
+  <b>⚡ Tek tuş yıllık devir:</b> yılın açık dönemlerini kapatır, mamul stoku ve ödenmemiş borçları yeni yıla devreder, Ocak dönemini açar, yıl sonu raporunu ve devir fişini verir.<br>
+  İşleyiş: Dönemler aylıktır ve sırayla kapatılır. Kapalı döneme kayıt girilemez/değiştirilemez (yalnızca ödeme durumu işaretlenebilir).
+  Aralık dönemi bittiğinde <b>Yıl Devri</b> yapılır: yıl kapatılır, mamul stoku ve ödenmemiş borçlar yeni yıla devredilir ve Ocak dönemi açılır.</p></div>
+  ${buAy() > son.kod ? `<div class="note w">Takvimde <b>${donemAd(buAy())}</b> ayındasınız; son açılmış dönem <b>${donemAd(son.kod)}</b>.</div>`:''}`;
+
+  yillar().forEach(y=>{
+    const yd = ds.filter(d=>d.kod.startsWith(y)), kap = yilKapali(y), dv = S.devirler[y], oy = ozet(y);
+    h += `<div class="card tw"><div class="bar">
+      <h3 style="margin:0">${y} Yılı ${kap?`<span class="rz kap">🔒 Devredildi · ${tarihTR(S.yilDurum[y].tarih)}</span>`:'<span class="rz ac">Açık</span>'}</h3><span class="sp"></span>
+      ${dv?`<button class="b mini" onclick="raporGoster('devir:${y}')">Açılış devir fişi</button>`:''}
+      <button class="b mini" onclick="raporGoster('${y}')">Yıl sonu raporu</button>
+      ${kap ? `<button class="b mini d" onclick="yilDevriGeriAl('${y}')">Yıl devrini geri al</button>`
+            : (donem(`${y}-12`) ? `<button class="b mini p" onclick="yilDevriSihirbaz('${y}')">Yıl devri yap</button>` : '')}
+    </div>
+    ${dv?`<div class="note">${dv.kaynakYil} yılından devir: mamul stoku <b>${fmtP(dv.mamulStok)}</b>, ödenmemiş borçlar <b>${fmtP(dv.bekleyenToplam)}</b> (TL karşılığı, ${dv.bekleyenler.length} belge).</div>`:''}
+    <table><thead><tr><th>Dönem</th><th>Durum</th><th class="n">Kayıt</th><th class="n">Toplam Gider</th><th class="n">Üretim Maliyeti</th><th class="n">SMM</th>
+      <th class="n">Net Satış</th><th class="n">Dönem Kârı</th><th class="n">Ödenmemiş</th><th class="n">Stok Sonu</th><th>Kapanış</th><th></th></tr></thead><tbody>
+    ${yd.map(d=>{const o = ozet(d.kod); return `<tr ${d.kod===S.aktif?'class="aktif"':''}>
+      <td><b>${donemAd(d.kod)}</b>${d.kod===S.aktif?' <span class="muted">(çalışma)</span>':''}</td><td>${durumRozet(d.kod)}</td>
+      <td class="n">${o.kayit}</td><td class="n">${fmt(o.gider)}</td><td class="n">${fmt(o.uretimMal)}</td><td class="n">${fmt(o.smm)}</td>
+      <td class="n">${fmt(o.netSatis)}</td><td class="n ${sinif(o.netKar)}">${fmt(o.netKar)}</td><td class="n">${fmt(o.bekleyen)}</td><td class="n">${fmt(o.stokSonu)}</td>
+      <td>${tarihTR(d.kapanis)}</td>
+      <td><button class="b mini" onclick="raporGoster('${d.kod}')">Rapor</button>
+        ${d.durum==='acik' ? `<button class="b mini" onclick="donemKapatSor('${d.kod}')">Kapat</button>` : (!kap ? `<button class="b mini" onclick="donemYenidenAc('${d.kod}')">Yeniden aç</button>` : '')}
+        ${d.kod!==S.aktif ? `<button class="b mini" onclick="aktifYap('${d.kod}')">Çalış</button>` : ''}</td></tr>`}).join('')}
+    </tbody><tfoot><tr class="tot"><td>${y} TOPLAM</td><td></td><td class="n">${oy.kayit}</td><td class="n">${fmt(oy.gider)}</td><td class="n">${fmt(oy.uretimMal)}</td><td class="n">${fmt(oy.smm)}</td>
+      <td class="n">${fmt(oy.netSatis)}</td><td class="n ${sinif(oy.netKar)}">${fmt(oy.netKar)}</td><td class="n">${fmt(oy.bekleyen)}</td><td class="n">${fmt(oy.stokSonu)}</td><td colspan="2"></td></tr></tfoot></table></div>`;
+  });
+  $('donemIcerik').innerHTML = h;
+}
+
+function aktifYap(k){ S.aktif = k; UI.f = UI.m = UI.u = k; UI.gy = k.slice(0,4); kaydet(); yenile(); }
+function aktifDuzelt(){ if(!acik(S.aktif)){ const a = sirali().find(d=>d.durum==='acik' && d.kod > S.aktif); if(a) aktifYap(a.kod); } }
+
+function donemKapat(k){
+  const d = donem(k);
+  const onceAcik = sirali().find(x=>x.kod < k && x.durum==='acik');
+  if(onceAcik){ alert(`Önce ${donemAd(onceAcik.kod)} dönemi kapatılmalı. Dönemler sırayla kapatılır.`); return false; }
+  d.durum = 'kapali'; d.kapanis = bugun(); d.ozet = ozet(k);
+  return true;
+}
+function donemKapatSor(k){
+  if(!confirm(`${donemAd(k)} dönemi kapatılacak.\n\nKapalı döneme yeni kayıt girilemez, mevcut kayıtlar değiştirilemez. Kapanıştan sonra dönem raporu gösterilecek.\n\nDevam edilsin mi?`)) return;
+  if(donemKapat(k)){ kaydet(); aktifDuzelt(); yenile(); raporGoster(k); }
+}
+function donemYenidenAc(k){
+  if(yilKapali(k.slice(0,4))) return alert('Bu yılın devri yapılmış. Önce yıl devrini geri almalısınız.');
+  const sonraKapali = sirali().filter(x=>x.kod > k && x.durum==='kapali').pop();
+  if(sonraKapali) return alert(`Önce ${donemAd(sonraKapali.kod)} dönemini yeniden açmalısınız (dönemler sondan başa doğru açılır).`);
+  if(!confirm(`${donemAd(k)} dönemi yeniden açılacak ve kayıtlar değiştirilebilir hale gelecek. Devam?`)) return;
+  const d = donem(k); d.durum = 'acik'; delete d.kapanis; delete d.ozet;
+  kaydet(); yenile();
+}
+function geriyeDonemEkle(){
+  const once = ayEkle(sirali()[0].kod, -1);
+  if(!confirm(`${donemAd(once)} dönemi (geçmiş dönem) eklenecek. Devam?`)) return;
+  donemEkle(once); kaydet(); yenile();
+}
+function sabitleriKopyala(kaynak, hedef){
+  const ks = S.giderler.filter(g=>g.tarih.startsWith(kaynak) && kalem(g.kalemId)?.tip==='sabit');
+  const sg = ayinSonGunu(hedef);
+  ks.forEach(g=>{
+    const yeni = {...g, id:uid(), tarih:`${hedef}-${pad(Math.min(+g.tarih.slice(8,10), sg))}`, odeme:'bekliyor', odemeTarihi:'', belgeNo:''};
+    if(paraOf(yeni)!=='TRY'){ const k = kurBul(yeni.tarih, yeni.para); if(k){ yeni.kur = k.kur; yeni.kurTarihi = k.tarih; yeni.kurKaynak = 'TCMB'; } }   // yeni tarihin kuru
+    S.giderler.push(yeni);
+  });
+  return ks.length;
+}
+
+function donemAcKontrol(kod){
+  if(donem(kod)) return `${donemAd(kod)} dönemi zaten açılmış.`;
+  if(yilKapali(kod.slice(0,4))) return `${kod.slice(0,4)} yılının devri yapılmış; bu yıla yeni dönem açılamaz.`;
+  return '';
+}
+/* Dönem Aç: yılı ve ayı kullanıcı seçer */
+function yeniDonemAc(){
+  const ds = sirali(), son = ds[ds.length-1].kod, oneri = ayEkle(son,1), y0 = +son.slice(0,4);
+  const yillarSec = []; for(let y = Math.min(+ds[0].kod.slice(0,4), y0) - 1; y <= y0 + 2; y++) yillarSec.push(y);
+  dlg(`<h2>📅 Dönem Aç</h2>
+    <p class="muted" style="margin-top:0">Açmak istediğiniz dönemin yılını ve ayını seçin. Son açılmış dönem: <b>${donemAd(son)}</b></p>
+    <div class="fg">
+      <label>Yıl<select name="yil" id="daYil">${yillarSec.map(y=>`<option ${y===+oneri.slice(0,4)?'selected':''}>${y}</option>`).join('')}</select></label>
+      <label>Ay<select name="ay" id="daAy">${AY_UZUN.map((a,i)=>`<option value="${pad(i+1)}" ${pad(i+1)===oneri.slice(5)?'selected':''}>${pad(i+1)} - ${a}</option>`).join('')}</select></label>
+    </div>
+    <div id="daBilgi"></div>`, f=>{
+      const kod = `${f.yil}-${f.ay}`, err = donemAcKontrol(kod);
+      if(err){ alert(err); return false; }
+      const r = donemAcIslem({...f, kod});
+      if(f.rapor && r.onceki) raporGoster(r.onceki);
+      bildir(`${donemAd(kod)} dönemi açıldı.`);
+    }, 'Dönemi Aç');
+
+  const guncelle = () => {
+    const kod = `${$('daYil').value}-${$('daAy').value}`, err = donemAcKontrol(kod);
+    const btn = document.querySelector('#dlgForm button[value=ok]');
+    btn.disabled = !!err; btn.textContent = err ? 'Dönemi Aç' : `${donemAd(kod)} Dönemini Aç`;
+    if(err){ $('daBilgi').innerHTML = `<div class="note w">${err}</div>`; return; }
+    const onceki = donem(ayEkle(kod,-1)), ileri = kod > son;
+    let h = '';
+    const devirsizYil = yillar().find(y=>y < kod.slice(0,4) && !yilKapali(y));
+    if(devirsizYil) h += `<div class="note w">${devirsizYil} yılının devri henüz yapılmadı. Yeni yıla geçmeden önce <b>⚡ Yıllık Devir</b> yapmanız önerilir (stok ve borçlar yeni yıla böyle aktarılır). Yine de dönemi açabilirsiniz.</div>`;
+    if(ileri && ayEkle(son,1) !== kod) h += `<div class="note w">Arada açılmamış dönemler kalacak (${donemAd(ayEkle(son,1))} – ${donemAd(ayEkle(kod,-1))}).</div>`;
+    if(!ileri) h += `<div class="note">Geçmiş bir dönem ekliyorsunuz.</div>`;
+    if(onceki){
+      const o = ozet(onceki.kod), sabitSay = S.giderler.filter(g=>g.tarih.startsWith(onceki.kod) && kalem(g.kalemId)?.tip==='sabit').length;
+      const kapatilabilir = onceki.durum==='acik' && ileri;
+      h += `<h3>Önceki dönem: ${donemAd(onceki.kod)} ${durumRozet(onceki.kod)}</h3>
+        <table><tr><td>Toplam gider</td><td class="n">${fmt(o.gider)}</td><td>Dönem kârı</td><td class="n ${sinif(o.netKar)}">${fmt(o.netKar)}</td></tr>
+        <tr><td>Ödenmemiş</td><td class="n">${fmt(o.bekleyen)}</td><td>Dönem sonu stok</td><td class="n">${fmt(o.stokSonu)}</td></tr></table>
+        ${uyarilar(onceki.kod)}
+        <h3>İşlemler</h3><div class="fg">
+        <label class="chk full"><input type="checkbox" name="kapat" ${kapatilabilir?'checked':'disabled'}> ${donemAd(onceki.kod)} dönemini (ve önceki açık dönemleri) kapat ve kilitle ${onceki.durum==='kapali'?'(zaten kapalı)':''}</label>
+        <label class="chk full"><input type="checkbox" name="rapor" checked> ${donemAd(onceki.kod)} dönem raporunu göster (yazdır / PDF)</label>
+        <label class="chk full"><input type="checkbox" name="stok" checked> Dönem sonu mamul stokunu (${fmt(o.stokSonu)}) yeni dönemin başına devret</label>
+        <label class="chk full"><input type="checkbox" name="sabit"> Sabit giderleri (${sabitSay} kayıt) yeni döneme "ödenmedi" olarak kopyala</label>`;
+    } else h += `<h3>İşlemler</h3><div class="fg">`;
+    h += `<label class="chk full"><input type="checkbox" name="aktif" ${ileri?'checked':''}> Çalışma dönemini ${donemAd(kod)} yap</label></div>`;
+    $('daBilgi').innerHTML = h;
+  };
+  $('daYil').onchange = $('daAy').onchange = guncelle;
+  guncelle();
+}
+/* Ortak dönem açma işlemi (Dönem Aç penceresi ve tek tuş kullanır) */
+function donemAcIslem(o){
+  const kod = o.kod || ayEkle(sirali().pop().kod, 1);
+  const onceki = donem(ayEkle(kod,-1))?.kod, oz = onceki ? ozet(onceki) : null;
+  if(o.kapat && onceki) for(const d of sirali().filter(d=>d.durum==='acik' && d.kod <= onceki)) donemKapat(d.kod);
+  donemEkle(kod);
+  if(o.stok && oz) S.stok[kod] = {basi:oz.stokSonu, sonu:(S.stok[kod]?.sonu)||0};
+  if(o.sabit && onceki) sabitleriKopyala(onceki, kod);
+  kaydet();
+  if(o.aktif) aktifYap(kod); else yenile();
+  return {son:onceki, onceki, yeni:kod};
+}
+
+/* ================== TEK TUŞ DEVİR ================== */
+function tekTusAylik(){
+  const son = sirali().pop(), yeni = ayEkle(son.kod,1), sonYil = son.kod.slice(0,4);
+  if(yeni.slice(0,4) !== sonYil && !yilKapali(sonYil)) return tekTusYillik(sonYil);   // Aralık'tan sonra yıl devri gerekir
+  const r = donemAcIslem({kapat:true, stok:true, sabit:false, aktif:true});
+  raporGoster(r.son);
+  bildir(`${donemAd(r.son)} kapatıldı, ${donemAd(r.yeni)} açıldı. Kapanış raporu aşağıda.`);
+}
+function tekTusYillik(y){
+  y = String(y || [...yillar()].reverse().find(x=>!yilKapali(x)) || '');
+  if(!y) return alert('Devredilecek açık yıl yok.');
+  if(!donem(`${y}-12`)){
+    const son = sirali().filter(d=>d.kod.startsWith(y)).pop().kod;
+    if(!confirm(`${y} yılının Aralık dönemi henüz açılmamış (son dönem: ${donemAd(son)}).\n\nEksik dönemler Aralık'a kadar açılıp yıl devri yapılsın mı?`)) return;
+    for(let k=ayEkle(son,1); k<=`${y}-12`; k=ayEkle(k,1)){ donemEkle(k); S.stok[k] = {basi:+(S.stok[ayEkle(k,-1)]?.sonu)||0, sonu:+(S.stok[ayEkle(k,-1)]?.sonu)||0}; }
+  }
+  const err = yilDevriKontrol(y); if(err) return alert(err);
+  yilDevriIslem(y, {sabit:false});
+  raporGoster(y);
+  bildir(`${y} yılı devredildi, Ocak ${+y+1} dönemi açıldı. Yıl sonu raporu ve devir fişi aşağıda.`);
+}
+function bildir(msg){
+  const n = document.createElement('div');
+  n.className = 'note no-print'; n.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:50;max-width:420px;box-shadow:0 6px 20px rgba(0,0,0,.2);background:var(--panel)';
+  n.textContent = '✔ ' + msg; document.body.appendChild(n); setTimeout(()=>n.remove(), 5000);
+}
+
+/* ================== YIL DEVRİ ================== */
+function yilDevriKontrol(y){
+  if(yilKapali(y)) return `${y} yılının devri zaten yapılmış.`;
+  if(!donem(`${y}-12`)) return `Yıl devri için önce ${y} yılının Aralık dönemi açılmış olmalı.`;
+  const oncekiYil = yillar().find(x=>x < y && !yilKapali(x));
+  if(oncekiYil) return `Önce ${oncekiYil} yılının devri yapılmalıdır.`;
+  return '';
+}
+/* Ortak yıl devri işlemi (sihirbaz ve tek tuş kullanır) */
+function yilDevriIslem(y, o){
+  const yy = String(+y+1), ocak = `${yy}-01`;
+  sirali().filter(d=>d.kod.startsWith(y) && d.durum==='acik').forEach(d=>donemKapat(d.kod));
+  // Devir bakiyeleri her zaman TL karşılığı olarak saklanır; döviz bazında ayrıca tutulur
+  const oz = paraIle('TUM', ()=>ozet(y)), R = paraIle('TUM', ()=>hesapla(y));
+  const bek = S.giderler.filter(g=>g.odeme==='bekliyor' && g.tarih.slice(0,4) <= y);
+  const stok = +(S.stok[`${y}-12`]?.sonu) || 0;
+  const dovizBorc = {}; bek.forEach(g=>{ const p = paraOf(g); dovizBorc[p] = (dovizBorc[p]||0) + (+g.tutar||0)*(1+(+g.kdv||0)/100); });
+  S.devirler[yy] = {tarih:bugun(), kaynakYil:y, mamulStok:stok, bekleyenToplam:sum(bek.map(brutTL)), dovizBorc, bekleyenler:bek.map(g=>g.id), ozet:oz, grup:{...R.grup}};
+  S.yilDurum[y] = {durum:'devredildi', tarih:bugun()};
+  donemEkle(ocak);
+  S.stok[ocak] = {basi:stok, sonu:(S.stok[ocak]?.sonu)||0};
+  if(o.sabit) sabitleriKopyala(`${y}-12`, ocak);
+  kaydet(); aktifYap(ocak);
+}
+function yilDevriSihirbaz(y){
+  y = String(y);
+  const err = yilDevriKontrol(y); if(err) return alert(err);
+  const yy = String(+y+1), acikDs = sirali().filter(d=>d.kod.startsWith(y) && d.durum==='acik');
+  const o = paraIle('TUM', ()=>ozet(y)), R = paraIle('TUM', ()=>hesapla(y));
+  const bek = S.giderler.filter(g=>g.odeme==='bekliyor' && g.tarih.slice(0,4) <= y);
+  const stok = +(S.stok[`${y}-12`]?.sonu) || 0;
+  const sabitSay = S.giderler.filter(g=>g.tarih.startsWith(`${y}-12`) && kalem(g.kalemId)?.tip==='sabit').length;
+  dlg(`<h2>Yıl Devri: ${y} → ${yy}</h2>
+    <div class="note">Yıl devri ile <b>${y}</b> yılı kapatılır. Gider ve maliyet (7'li) hesapları yeni yılda sıfırdan başlar; mamul stoku ve ödenmemiş borçlar gibi
+    bilanço bakiyeleri <b>${yy}</b> yılına devredilir ve Ocak ${yy} dönemi açılır. İşlemden önce yedek almanız önerilir.</div>
+    <h3>${y} Yılı Özeti (TL karşılığı)</h3>${paraIle('TUM', ()=>ozetTablo(o))}
+    <h3>${yy} Yılına Devredecek Bakiyeler (TL)</h3>
+    <table>
+      <tr><td>Mamul stoku (Aralık ${y} dönem sonu) → Ocak ${yy} dönem başı stoku</td><td class="n"><b>${fmtP(stok)}</b></td></tr>
+      <tr><td>Ödenmemiş giderler / borçlar (${bek.length} belge, KDV dahil, TL karşılığı)</td><td class="n"><b>${fmtP(sum(bek.map(brutTL)))}</b></td></tr>
+      <tr><td>${y} dönem kârı/zararı → Geçmiş yıllar kâr/zararı</td><td class="n ${sinif(o.netKar)}"><b>${fmtP(o.netKar)}</b></td></tr>
+    </table>
+    ${!S.stok[`${y}-12`] && R.uretimMal ? `<div class="note w">Aralık ${y} için dönem sonu mamul stoku girilmemiş; 0 olarak devredilecek.</div>`:''}
+    ${acikDs.length ? `<div class="note w">${y} yılında ${acikDs.length} açık dönem var (${acikDs.map(d=>AY_UZUN[+d.kod.slice(5)-1]).join(', ')}). Devir sırasında kapatılacak.</div>`:''}
+    <h3>İşlemler</h3>
+    <div class="fg">
+      <label class="chk full"><input type="checkbox" name="rapor" checked> ${y} yıl sonu raporunu ve devir fişini göster (yazdır / PDF)</label>
+      <label class="chk full"><input type="checkbox" name="sabit"> Aralık ${y} sabit giderlerini (${sabitSay} kayıt) Ocak ${yy} dönemine kopyala</label>
+    </div>`, f=>{
+      yilDevriIslem(y, f); sekmeyeGit('donemler');
+      if(f.rapor) raporGoster(y);
+    }, 'Yıl Devrini Yap');
+}
+function yilDevriGeriAl(y){
+  const yy = String(+y+1);
+  if(yilKapali(yy)) return alert(`Önce ${yy} yılının devrini geri almalısınız.`);
+  const kayit = S.giderler.filter(g=>g.tarih.startsWith(yy)).length;
+  if(kayit) return alert(`${yy} yılına ait ${kayit} gider kaydı var. Yıl devrini geri almak için önce bu kayıtları silmelisiniz.`);
+  if(!confirm(`${y} yılının devri geri alınacak. ${yy} yılının boş dönemleri silinecek ve ${y} yılı tekrar açık duruma gelecek. Devam?`)) return;
+  const dondur = confirm(`${y} yılının Aralık dönemi de yeniden açılsın mı?\n(Tamam: Aralık açılır · İptal: dönemler kapalı kalır)`);
+  S.donemler = S.donemler.filter(d=>!d.kod.startsWith(yy));
+  if(dondur){ const d = donem(`${y}-12`); if(d){ d.durum='acik'; delete d.kapanis; delete d.ozet; } }
+  Object.keys(S.stok).filter(k=>k.startsWith(yy)).forEach(k=>delete S.stok[k]);
+  Object.keys(S.uretim).filter(k=>k.startsWith(yy)).forEach(k=>delete S.uretim[k]);
+  delete S.devirler[yy]; delete S.yilDurum[y];
+  if(!donem(S.aktif)) S.aktif = `${y}-12`;
+  kaydet(); aktifYap(S.aktif);
+}
+
+/* ================== RAPORLAR ================== */
+const raporBaslik = (baslik, alt) => `<div style="margin-bottom:10px"><div><b>${esc(S.firma.ad)}</b>${S.firma.vkn?' · '+esc(S.firma.vkn):''}${S.firma.adres?'<br><span class="muted">'+esc(S.firma.adres)+'</span>':''}</div>
+  <h2 style="margin:8px 0 2px">${baslik}</h2><div class="muted">${alt}Para birimi: ${gorAd()} · Rapor tarihi: ${new Date().toLocaleDateString('tr-TR')}</div></div>`;
+function bekleyenTablo(list, durumKol){
+  if(!list.length) return '<p class="muted">Ödenmemiş gider yok.</p>';
+  return `<div class="tw"><table><tr><th>Tarih</th><th>Belge No</th><th>Mal Maliyet Kalemi</th><th>Açıklama</th>${durumKol?'<th>Güncel durum</th>':''}<th class="n">Döviz tutarı (KDV dahil)</th><th class="n">Toplam (KDV dahil)</th></tr>
+    ${list.map(g=>`<tr><td>${tarihTR(g.tarih)}</td><td>${esc(g.belgeNo)}</td><td>${esc(kalem(g.kalemId)?.ad||'?')}</td><td>${esc(g.aciklama)}</td>${durumKol?`<td>${durum(g)}${g.odemeTarihi?' <span class="muted">'+tarihTR(g.odemeTarihi)+'</span>':''}</td>`:''}
+      <td class="n">${paraOf(g)==='TRY'?'':fmtP((+g.tutar||0)*(1+(+g.kdv||0)/100), paraOf(g))}</td><td class="n">${fmt(brut(g))}</td></tr>`).join('')}
+    <tr class="tot"><td colspan="${durumKol?6:5}">TOPLAM (${list.length} belge)</td><td class="n">${fmt(sum(list.map(brut)))}</td></tr></table></div>`;
+}
+function devirFisiHTML(yy){
+  const dv = S.devirler[yy]; if(!dv) return '<p class="muted">Devir kaydı yok.</p>';
+  const bek = dv.bekleyenler.map(id=>S.giderler.find(g=>g.id===id)).filter(Boolean).filter(dahil);
+  const db = Object.entries(dv.dovizBorc||{}).filter(([p])=>p!=='TRY');
+  return `<table style="max-width:720px"><tr><th>Devir kalemi (TL karşılığı)</th><th class="n">Tutar</th></tr>
+    <tr><td>Kaynak yıl / devir tarihi</td><td class="n">${dv.kaynakYil} / ${tarihTR(dv.tarih)}</td></tr>
+    <tr><td>Devreden mamul stoku (Ocak ${yy} dönem başı stoku)</td><td class="n"><b>${fmtP(dv.mamulStok)}</b></td></tr>
+    <tr><td>Devreden ödenmemiş giderler / borçlar</td><td class="n"><b>${fmtP(dv.bekleyenToplam)}</b></td></tr>
+    ${db.map(([p,v])=>`<tr><td class="ind">bunun ${p} cinsinden olanı</td><td class="n">${fmtP(v,p)}</td></tr>`).join('')}
+    <tr><td>${dv.kaynakYil} dönem kârı/zararı (geçmiş yıllar kâr/zararına aktarıldı)</td><td class="n ${sinif(dv.ozet.netKar)}">${fmtP(dv.ozet.netKar)}</td></tr>
+    <tr class="grp"><td colspan="2">${dv.kaynakYil} yılında kapatılan gider hesapları</td></tr>
+    ${Object.entries(GRUPLAR).map(([g,G])=>`<tr><td class="ind">${G.kod} ${G.ad}</td><td class="n">${fmtP(dv.grup?.[g]||0)}</td></tr>`).join('')}
+    <tr class="tot"><td>Toplam kapatılan gider</td><td class="n">${fmtP(dv.ozet.gider)}</td></tr></table>
+    <h3>Devreden ödenmemiş belgeler (${gorAd()})</h3>${bekleyenTablo(bek, true)}`;
+}
+function raporHTML(p){
+  const yil = p.length === 4, gs = G().filter(g=>g.tarih.startsWith(p)), o = ozet(p);
+  const alt = yil ? (yilKapali(p) ? `Durum: Devredildi (${tarihTR(S.yilDurum[p].tarih)}) · ` : 'Durum: Açık (kesinleşmemiş) · ')
+                  : (donem(p)?.durum==='kapali' ? `Durum: Kapalı (${tarihTR(donem(p).kapanis)}) · ` : 'Durum: Açık (kesinleşmemiş) · ');
+  let n = 1, h = raporBaslik(yil ? `${p} Yılı Sonu Raporu` : `${donemAd(p)} Dönem Kapanış Raporu`, alt);
+  h += `<h3>${n++}. Dönem Özeti</h3><div style="max-width:560px">${ozetTablo(o)}</div>`;
+  let kt = `<table><tr><th>Mal maliyet kalemi</th><th class="n">Kayıt</th><th class="n">Tutar (KDV hariç)</th><th class="n">KDV</th><th class="n">Toplam</th></tr>`;
+  Object.entries(GRUPLAR).forEach(([g,G])=>{
+    const gg = gs.filter(x=>kalem(x.kalemId)?.grup===g); if(!gg.length) return;
+    const satir = (cls, ad, l) => `<tr class="${cls}"><td class="${cls?'':'ind'}">${ad}</td><td class="n">${l.length}</td><td class="n">${fmt(sum(l.map(gT)))}</td><td class="n">${fmt(sum(l.map(kdvTutar)))}</td><td class="n">${fmt(sum(l.map(brut)))}</td></tr>`;
+    kt += satir('grp', `${G.kod} — ${G.ad}`, gg);
+    S.kalemler.filter(k=>k.grup===g).forEach(k=>{ const kk = gg.filter(x=>x.kalemId===k.id); if(kk.length) kt += satir('', esc(k.ad), kk); });
+  });
+  kt += `<tr class="tot"><td>TOPLAM</td><td class="n">${gs.length}</td><td class="n">${fmt(sum(gs.map(x=>x.tutar)))}</td><td class="n">${fmt(sum(gs.map(kdvTutar)))}</td><td class="n">${fmt(sum(gs.map(brut)))}</td></tr></table>`;
+  h += `<h3>${n++}. Mal Maliyet Kalemlerine Göre Giderler</h3><div class="tw">${gs.length?kt:'<p class="muted">Bu dönemde gider kaydı yok.</p>'}</div>`;
+  if(yil) h += `<h3>${n++}. Aylık Gider Tablosu</h3><div class="tw">${giderTabloHTML(p,false,false)}</div>`;
+  h += `<h3>${n++}. Maliyet Tablosu</h3>${maliyetHTML(p,false)}`;
+  h += `<h3>${n++}. Ödenmemiş Giderler</h3>${bekleyenTablo(gs.filter(g=>g.odeme==='bekliyor'))}`;
+  if(yil && S.devirler[+p+1]) h += `<h3>${n++}. ${+p+1} Yılına Devir Fişi</h3>${devirFisiHTML(String(+p+1))}`;
+  return h;
+}
+function raporGoster(key){
+  const html = key.startsWith('devir:')
+    ? raporBaslik(`${key.slice(6)} Yılı Açılış Devir Fişi`, '') + devirFisiHTML(key.slice(6))
+    : raporHTML(key);
+  $('raporAlan').innerHTML = `<div class="card"><div class="bar no-print"><b>Rapor önizleme</b><span class="sp"></span>
+    <button class="b p" onclick="raporYazdir()">Yazdır / PDF</button><button class="b" onclick="$('raporAlan').innerHTML=''">Kapat</button></div>${html}</div>`;
+  sekmeyeGit('donemler');
+  setTimeout(()=>$('raporAlan').scrollIntoView({behavior:'smooth'}), 50);
+}
+function raporYazdir(){ document.body.classList.add('pr'); window.print(); }
+window.addEventListener('afterprint', ()=>document.body.classList.remove('pr'));
+
+/* ================== GİDER KAYITLARI ================== */
+function renderGiderler(){
+  const p=UI.f, gr=$('fGrup').value, kl=$('fKalem').value, od=$('fOdeme').value, q=$('fAra').value.trim().toLocaleLowerCase('tr');
+  const list = G().filter(g=>{
+    const k = kalem(g.kalemId);
+    return (!p || g.tarih.startsWith(p)) && (!gr || k?.grup===gr) && (!kl || g.kalemId===kl) && (!od || g.odeme===od)
+      && (!q || (g.aciklama+' '+g.belgeNo+' '+(k?.ad||'')).toLocaleLowerCase('tr').includes(q));
+  }).sort((a,b)=>b.tarih.localeCompare(a.tarih));
+  const kilit = p.length===7 && !acik(p) ? `<div class="note w">🔒 ${donemAd(p)} dönemi kapalıdır. Kayıtlar yalnızca görüntülenebilir; ödeme durumu işaretlenebilir.</div>` : '';
+  const tl = gor()==='TUM';
+  const kurYok = list.filter(g=>paraOf(g)!=='TRY' && !(+g.kur>0)).length;
+  $('giderListe').innerHTML = kilit + `<div class="muted" style="margin-bottom:6px">Görünüm: <b>${gorAd()}</b></div>
+    ${kurYok?`<div class="note w">${kurYok} dövizli kaydın kuru yok; TL karşılıkları 0 görünür. Ayarlar → "Dövizli kayıtlara TCMB kurunu uygula".</div>`:''}
+    <table id="tblGider"><thead><tr><th>Tarih</th><th>Belge No</th><th>Mal Maliyet Kalemi</th><th>Grup</th><th>Açıklama</th><th>Ürün</th>
+    ${tl?'<th>Döviz</th><th class="n">Döviz tutarı</th><th class="n">TCMB satış kuru</th>':''}
+    <th class="n">Tutar${tl?' (TL)':''}</th><th class="n">KDV %</th><th class="n">KDV</th><th class="n">Toplam</th><th>Durum</th><th class="no-print"></th></tr></thead><tbody>
+    ${list.map(g=>{const k=kalem(g.kalemId), ac=acik(g.tarih), dv=paraOf(g)!=='TRY'; return `<tr><td>${tarihTR(g.tarih)}</td><td>${esc(g.belgeNo)}</td><td>${esc(k?.ad||'?')}</td>
+      <td>${k?tag(k.grup):''}</td><td>${esc(g.aciklama)}</td><td>${esc(urun(g.urunId)?.ad||'')}</td>
+      ${tl?`<td>${paraOf(g)}</td><td class="n">${dv?fmtP(+g.tutar,paraOf(g)):''}</td><td class="n" title="${dv?(g.kurKaynak==='Elle'?'Elle girildi':'TCMB '+tarihTR(g.kurTarihi)):''}">${dv?(+g.kur>0?KURF.format(g.kur)+(g.kurKaynak==='Elle'?' ✎':''):'<span class="neg">kur yok</span>'):''}</td>`:''}
+      <td class="n">${fmt(gT(g))}</td><td class="n">${g.kdv}</td><td class="n">${fmt(kdvTutar(g))}</td><td class="n"><b>${fmt(brut(g))}</b></td>
+      <td><a href="#" onclick="odemeDegis('${g.id}');return false" title="Ödeme durumunu değiştir">${durum(g)}</a></td>
+      <td class="no-print">${ac ? `<button class="b mini" onclick="giderForm('${g.id}')">Düzenle</button> <button class="b mini d" onclick="giderSil('${g.id}')">Sil</button>` : '<span class="muted" title="Dönem kapalı">🔒</span>'}</td></tr>`}).join('')
+      || `<tr><td colspan="${tl?15:12}" class="muted">Bu filtreye uygun kayıt yok.</td></tr>`}
+    </tbody><tfoot><tr class="tot"><td colspan="${tl?9:6}">${list.length} kayıt — TOPLAM</td><td class="n">${fmt(sum(list.map(gT)))}</td><td></td>
+      <td class="n">${fmt(sum(list.map(kdvTutar)))}</td><td class="n">${fmt(sum(list.map(brut)))}</td><td colspan="2"></td></tr></tfoot></table>`;
+}
+function giderForm(id){
+  const acikDs = sirali().filter(d=>d.durum==='acik');
+  let g;
+  if(id){ g = S.giderler.find(x=>x.id===id); if(!acik(g.tarih)) return alert('Bu kayıt kapalı bir döneme ait, değiştirilemez.'); }
+  else {
+    if(!acikDs.length) return alert('Açık dönem yok. Dönem İşlemleri ekranından yeni dönem açın.');
+    const hedef = acik(S.aktif) ? S.aktif : acikDs[acikDs.length-1].kod;
+    g = {tarih: hedef===buAy() ? bugun() : hedef+'-01', kdv:20, odeme:'odendi', para: gor()==='TUM' ? 'TRY' : gor()};
+  }
+  const sonAcik = acikDs[acikDs.length-1].kod;
+  dlg(`<h2>${id?'Gideri Düzenle':'Yeni Gider'}</h2>
+  <div class="fg">
+    <label>Tarih<input type="date" name="tarih" id="gfTarih" required value="${g.tarih||''}" min="${acikDs[0].kod}-01" max="${sonAcik}-${pad(ayinSonGunu(sonAcik))}"></label>
+    <label>Belge / fatura no<input name="belgeNo" value="${esc(g.belgeNo)}"></label>
+    <label class="full">Mal maliyet kalemi<select name="kalemId" required>${kalemOptions(g.kalemId)}</select></label>
+    <label class="full">Açıklama<input name="aciklama" value="${esc(g.aciklama)}" placeholder="Örn. ABC Ltd. hammadde faturası"></label>
+    <label>Para birimi<select name="para" id="gfPara">${paraOptions(paraOf(g))}</select></label>
+    <label>Tutar<input type="number" step="0.01" min="0" name="tutar" id="gfTutar" required value="${g.tutar??''}"></label>
+    <label>Kur (TCMB döviz satış)<input type="number" step="0.0001" min="0" name="kur" id="gfKur" value="${paraOf(g)!=='TRY' && g.kur ? g.kur : ''}" ${g.kurKaynak==='Elle'?'data-elle="1"':''}></label>
+    <label>TL karşılığı<input id="gfTL" disabled></label>
+    <div class="full muted" id="gfKurBilgi" style="font-size:12px;margin-top:-4px"></div>
+    <label>KDV oranı<select name="kdv">${[0,1,10,20].map(o=>`<option ${+g.kdv===o?'selected':''}>${o}</option>`).join('')}</select></label>
+    <label class="chk full"><input type="checkbox" name="dahil"> Girdiğim tutar KDV dahil (KDV'yi ayır)</label>
+    <label>Ödeme durumu<select name="odeme"><option value="odendi" ${g.odeme==='odendi'?'selected':''}>Ödendi</option><option value="bekliyor" ${g.odeme==='bekliyor'?'selected':''}>Bekliyor</option></select></label>
+    <label>Doğrudan ürüne ata (isteğe bağlı)<select name="urunId"><option value="">— Dağıtılsın —</option>${S.urunler.map(u=>`<option value="${u.id}" ${g.urunId===u.id?'selected':''}>${esc(u.ad)}</option>`).join('')}</select></label>
+  </div>`, f=>{
+    if(!acik(f.tarih)){ alert(`${tarihTR(f.tarih)} tarihi açık bir döneme ait değil. Kayıt yalnızca açık dönemlere girilebilir.`); return false; }
+    let tutar = +f.tutar; const kdv = +f.kdv, para = f.para || 'TRY';
+    if(f.dahil) tutar = Math.round(tutar/(1+kdv/100)*100)/100;
+    const rec = {id:id||uid(), tarih:f.tarih, belgeNo:f.belgeNo.trim(), kalemId:f.kalemId, aciklama:f.aciklama.trim(), tutar, kdv, odeme:f.odeme,
+                 odemeTarihi: f.odeme==='odendi' ? (g.odemeTarihi || f.tarih) : '', urunId:f.urunId||'', para, kur:1, kurTarihi:'', kurKaynak:''};
+    if(para !== 'TRY'){
+      const kur = +f.kur;
+      if(!(kur > 0)){ alert(`${para} için kur bulunamadı. TCMB döviz satış kurunu "Kur" alanına yazın.`); return false; }
+      const k = kurBul(f.tarih, para);
+      Object.assign(rec, {kur, kurTarihi: k?.tarih || f.tarih, kurKaynak: k && Math.abs(k.kur - kur) < 1e-9 ? 'TCMB' : 'Elle'});
+    }
+    if(id) Object.assign(g, rec); else S.giderler.push(rec);
+    kaydet(); yenile();
+  });
+  // Para birimi / tarih değişince TCMB kurunu getir ve TL karşılığını göster
+  const kurGuncelle = () => {
+    const para = $('gfPara').value, tarih = $('gfTarih').value, kurInp = $('gfKur');
+    if(para === 'TRY'){ kurInp.value = ''; kurInp.disabled = true; $('gfKurBilgi').textContent = ''; }
+    else {
+      kurInp.disabled = false;
+      const k = tarih ? kurBul(tarih, para) : null;
+      if(k && !kurInp.dataset.elle) kurInp.value = k.kur;
+      $('gfKurBilgi').innerHTML = k ? `TCMB ${para} döviz satış kuru (${tarihTR(k.tarih)} ilanı): <b>${KURF.format(k.kur)}</b>${kurInp.dataset.elle && +kurInp.value!==k.kur ? ' · <span class="st-w">elle değiştirildi</span>' : ''}`
+                                    : `<span class="st-w">${tarihTR(tarih)} için TCMB ${para} kuru bulunamadı; kuru elle girin (tcmb.gov.tr → Kurlar).</span>`;
+    }
+    const tl = (+$('gfTutar').value||0) * (para==='TRY' ? 1 : (+kurInp.value||0));
+    $('gfTL').value = fmtP(tl);
+  };
+  $('gfKur').oninput = e => { e.target.dataset.elle = '1'; kurGuncelle(); };
+  $('gfPara').onchange = () => { delete $('gfKur').dataset.elle; kurGuncelle(); };
+  $('gfTarih').onchange = () => { delete $('gfKur').dataset.elle; kurGuncelle(); };
+  $('gfTutar').oninput = kurGuncelle;
+  kurGuncelle();
+}
+function giderSil(id){
+  const g = S.giderler.find(x=>x.id===id);
+  if(!acik(g.tarih)) return alert('Kapalı döneme ait kayıt silinemez.');
+  if(confirm('Bu gider kaydı silinsin mi?')){ S.giderler = S.giderler.filter(x=>x.id!==id); kaydet(); yenile(); }
+}
+function odemeDegis(id){
+  const g = S.giderler.find(x=>x.id===id);
+  if(g.odeme==='bekliyor'){ g.odeme='odendi'; g.odemeTarihi=bugun(); } else { g.odeme='bekliyor'; g.odemeTarihi=''; }
+  kaydet(); yenile();
+}
+function sabitKopyala(){
+  const hedef = S.aktif;
+  if(!acik(hedef)) return alert(`Çalışma dönemi (${donemAd(hedef)}) kapalı. Açık bir dönemi çalışma dönemi yapın.`);
+  const kaynak = ayEkle(hedef,-1);
+  const n = S.giderler.filter(g=>g.tarih.startsWith(kaynak) && kalem(g.kalemId)?.tip==='sabit').length;
+  if(!n) return alert(`${donemAd(kaynak)} döneminde sabit gider bulunamadı.`);
+  if(!confirm(`${donemAd(kaynak)} dönemine ait ${n} sabit gider ${donemAd(hedef)} dönemine "ödenmedi" olarak kopyalanacak. Devam?`)) return;
+  sabitleriKopyala(kaynak, hedef); UI.f = hedef; kaydet(); yenile();
+}
+
+/* ================== KALEMLER ================== */
+function renderKalemler(){
+  let h = `<table><tr><th>Mal Maliyet Kalemi</th><th>Grup</th><th>Davranış</th><th class="n">Kayıt sayısı</th><th class="n">Toplam (KDV hariç)</th><th></th></tr>`;
+  Object.entries(GRUPLAR).forEach(([g,G])=>{
+    const ks = S.kalemler.filter(k=>k.grup===g);
+    h += `<tr class="grp"><td colspan="6">${G.kod} — ${G.ad} ${G.uretim?'<span class="muted">(üretim maliyeti)</span>':'<span class="muted">(dönem gideri)</span>'}</td></tr>`;
+    ks.forEach(k=>{ const gs=G().filter(x=>x.kalemId===k.id);
+      h += `<tr><td class="ind">${esc(k.ad)}</td><td>${tag(g)}</td><td>${k.tip==='sabit'?'Sabit':'Değişken'}</td><td class="n">${gs.length}</td><td class="n">${fmt(sum(gs.map(gT)))}</td>
+      <td><button class="b mini" onclick="kalemForm('${k.id}')">Düzenle</button> <button class="b mini d" onclick="kalemSil('${k.id}')">Sil</button></td></tr>`; });
+  });
+  $('kalemListe').innerHTML = h + '</table>';
+}
+function kalemForm(id){
+  const k = id ? kalem(id) : {grup:'GYG', tip:'sabit'};
+  dlg(`<h2>${id?'Mal Maliyet Kalemini Düzenle':'Yeni Mal Maliyet Kalemi'}</h2><div class="fg">
+    <label class="full">Mal maliyet kalemi adı<input name="ad" required value="${esc(k.ad)}"></label>
+    <label class="full">Maliyet grubu<select name="grup">${Object.entries(GRUPLAR).map(([g,G])=>`<option value="${g}" ${k.grup===g?'selected':''}>${G.kod} ${G.ad}</option>`).join('')}</select></label>
+    <label>Davranış<select name="tip"><option value="sabit" ${k.tip==='sabit'?'selected':''}>Sabit</option><option value="degisken" ${k.tip==='degisken'?'selected':''}>Değişken</option></select></label>
+  </div>`, f=>{
+    const rec = {ad:f.ad.trim(), grup:f.grup, tip:f.tip};
+    if(id) Object.assign(k, rec); else S.kalemler.push({id:uid(), ...rec});
+    kaydet(); yenile();
+  });
+}
+function kalemSil(id){
+  const n = S.giderler.filter(g=>g.kalemId===id).length;
+  if(n) return alert(`Bu mal maliyet kalemine bağlı ${n} gider kaydı var. Önce kayıtları silin ya da başka bir mal maliyet kalemine taşıyın.`);
+  if(confirm('Mal maliyet kalemi silinsin mi?')){ S.kalemler = S.kalemler.filter(k=>k.id!==id); kaydet(); yenile(); }
+}
+
+/* ================== ÜRÜNLER & ÜRETİM ================== */
+function renderUretim(){
+  $('urunListe').innerHTML = `<h3 style="margin-top:0">Ürünler</h3><table><tr><th>Ürün</th><th>Birim</th><th>Kod</th><th class="n">Maliyet katsayısı</th><th></th></tr>
+    ${S.urunler.map(u=>`<tr><td>${esc(u.ad)}</td><td>${esc(u.birim)}</td><td>${esc(u.kod)}</td><td class="n">${NUM.format(+u.katsayi||1)}</td><td><button class="b mini" onclick="urunForm('${u.id}')">Düzenle</button> <button class="b mini d" onclick="urunSil('${u.id}')">Sil</button></td></tr>`).join('')
+    || '<tr><td colspan="5" class="muted">Henüz ürün yok. Maliyet tablosunda birim maliyet hesaplanması için en az bir ürün ekleyin.</td></tr>'}</table>`;
+  const p = UI.u, ac = acik(p), dis = ac ? '' : 'disabled';
+  $('uKilit').innerHTML = ac ? '' : `<div class="note w">🔒 ${donemAd(p)} dönemi kapalıdır; üretim ve stok bilgileri değiştirilemez.</div>`;
+  const d = S.uretim[p] || {};
+  const ayKur = para => kurBul(`${p}-${pad(ayinSonGunu(p))}`, para, true);
+  $('uretimTablo').innerHTML = S.urunler.length ? `<table><tr><th>Ürün</th><th class="n">Üretilen miktar</th><th class="n">Satılan miktar</th><th class="n">Birim satış fiyatı (KDV hariç)</th><th>Para</th>
+      <th class="n">Kur (boşsa TCMB ay sonu satış)</th><th class="n">Satış hasılatı</th><th class="n">TL karşılığı</th></tr>
+    ${S.urunler.map(u=>{const x=d[u.id]||{}, para=x.para||'TRY', k=para==='TRY'?null:ayKur(para), kur=satisKuru(p,x), has=(+x.satilan||0)*(+x.fiyat||0); return `<tr><td>${esc(u.ad)} <span class="muted">(${esc(u.birim)})</span></td>
+      <td class="n"><input type="number" min="0" step="any" ${dis} value="${x.uretilen??''}" onchange="uretimSet('${u.id}','uretilen',this.value)"></td>
+      <td class="n"><input type="number" min="0" step="any" ${dis} value="${x.satilan??''}" onchange="uretimSet('${u.id}','satilan',this.value)"></td>
+      <td class="n"><input type="number" min="0" step="0.01" ${dis} value="${x.fiyat??''}" onchange="uretimSet('${u.id}','fiyat',this.value)"></td>
+      <td><select ${dis} onchange="uretimSet('${u.id}','para',this.value)">${paraOptions(para)}</select></td>
+      <td class="n">${para==='TRY'?'—':`<input type="number" min="0" step="0.0001" style="width:110px" ${dis} value="${x.kur??''}" placeholder="${k?KURF.format(k.kur):'kur yok'}" title="${k?'TCMB '+tarihTR(k.tarih)+' satış kuru':'TCMB kuru bulunamadı, elle girin'}" onchange="uretimSet('${u.id}','kur',this.value)">`}</td>
+      <td class="n">${fmtP(has, para)}</td><td class="n">${para!=='TRY'&&!kur?'<span class="neg">kur yok</span>':fmtP(has*kur)}</td></tr>`}).join('')}</table>
+      <p class="muted" style="font-size:12px">Dövizli satışlar, kur alanı boşsa ayın son günü itibarıyla geçerli TCMB döviz satış kuruyla TL'ye çevrilir. Mamul stokları TL olarak girilir.</p>` : '<p class="muted">Önce ürün ekleyin.</p>';
+  const st = S.stok[p] || {};
+  $('stBasi').value = st.basi ?? ''; $('stSonu').value = st.sonu ?? '';
+  $('stBasi').disabled = $('stSonu').disabled = !ac;
+}
+function uretimSet(uid_, alan, v){
+  const p = UI.u; if(!acik(p)) return;
+  (S.uretim[p] ||= {}); (S.uretim[p][uid_] ||= {})[alan] = alan==='para' ? v : (v===''?'':+v);
+  kaydet(); renderUretim();
+}
+function stokSet(){ const p = UI.u; if(!acik(p)) return; S.stok[p] = {basi:+$('stBasi').value||0, sonu:+$('stSonu').value||0}; kaydet(); }
+function urunForm(id){
+  const u = id ? urun(id) : {birim:'adet'};
+  dlg(`<h2>${id?'Ürünü Düzenle':'Yeni Ürün'}</h2><div class="fg">
+    <label class="full">Ürün adı<input name="ad" required value="${esc(u.ad)}"></label>
+    <label>Birim<input name="birim" value="${esc(u.birim)}" placeholder="adet, kg, m²…"></label>
+    <label>Stok kodu<input name="kod" value="${esc(u.kod)}"></label>
+    <label class="full">Maliyet katsayısı (eşdeğer birim)<input type="number" step="any" min="0.01" name="katsayi" value="${u.katsayi??1}">
+      <span style="font-size:11px">Bir birim bu ürün, temel ürüne göre kaç kat kaynak tüketir? Örn. masa sandalyenin 3 katı malzeme/işçilik harcıyorsa masa = 3, sandalye = 1.</span></label></div>`, f=>{
+    const rec = {ad:f.ad.trim(), birim:f.birim.trim()||'adet', kod:f.kod.trim(), katsayi:+f.katsayi||1};
+    if(id) Object.assign(u, rec); else S.urunler.push({id:uid(), ...rec});
+    kaydet(); yenile();
+  });
+}
+function urunSil(id){
+  if(!confirm('Ürün silinsin mi? (Bu ürüne doğrudan atanmış giderler "dağıtılsın" durumuna geçer.)')) return;
+  S.urunler = S.urunler.filter(u=>u.id!==id);
+  S.giderler.forEach(g=>{ if(g.urunId===id) g.urunId=''; });
+  Object.values(S.uretim).forEach(m=>delete m[id]);
+  kaydet(); yenile();
+}
+
+/* ================== GİDER TABLOSU ================== */
+function giderTabloHTML(y, dahil, ids){
+  const val = g => dahil ? brut(g) : gT(g);
+  const yg = G().filter(g=>g.tarih.startsWith(y));
+  if(!yg.length) return `<p class="muted">${y} yılına ait gider kaydı yok.</p>`;
+  const genel = sum(yg.map(val)) || 1;
+  const ayTop = k => AY.map((_,i)=>sum(yg.filter(g=>(!k || k(g)) && g.tarih.slice(5,7)===pad(i+1)).map(val)));
+  const satir = (cls, ad, arr, ind) => `<tr class="${cls}"><td class="${ind?'ind':''}">${ad}</td>${arr.map(v=>`<td class="n">${v?NUM.format(v):'-'}</td>`).join('')}<td class="n"><b>${fmt(sum(arr))}</b></td><td class="n">${pct(sum(arr)/genel)}</td></tr>`;
+  let h = `<table ${ids?'id="tblGT"':''}><thead><tr><th>Mal maliyet kalemi</th>${AY.map(a=>`<th class="n">${a}</th>`).join('')}<th class="n">Toplam</th><th class="n">Pay</th></tr></thead><tbody>`;
+  Object.entries(GRUPLAR).forEach(([g,G])=>{
+    const ks = S.kalemler.filter(k=>k.grup===g && yg.some(x=>x.kalemId===k.id));
+    if(!ks.length) return;
+    h += `<tr class="grp"><td colspan="15">${G.kod} — ${G.ad}</td></tr>`;
+    ks.forEach(k=> h += satir('', esc(k.ad), ayTop(x=>x.kalemId===k.id), true));
+    h += satir('sub', `${G.kisa} toplamı`, ayTop(x=>kalem(x.kalemId)?.grup===g));
+  });
+  return h + satir('tot big', 'GENEL TOPLAM', ayTop()) + `</tbody></table>`;
+}
+function renderGiderTablo(){
+  const y = UI.gy, dahil = $('gtKdv').checked;
+  const val = g => dahil ? brut(g) : gT(g);
+  const yg = G().filter(g=>g.tarih.startsWith(y));
+  const genel = sum(yg.map(val)) || 1;
+  $('gtIcerik').innerHTML = `<div class="muted" style="margin-bottom:6px">${y} yılı gider tablosu (${dahil?'KDV dahil':'KDV hariç'}, ${PARA[gorPara()].s}) · ${gorAd()}${yilKapali(y)?' · 🔒 Yıl devredildi':''}</div>` + giderTabloHTML(y, dahil, true);
+  const sb = sum(yg.filter(g=>kalem(g.kalemId)?.tip==='sabit').map(val)), dg = sum(yg.map(val)) - sb;
+  $('gtSabit').innerHTML = `<h3 style="margin-top:0">Sabit / Değişken Gider Analizi</h3><table>
+    <tr><td>Sabit giderler</td><td class="n">${fmt(sb)}</td><td class="n">${pct(sb/genel)}</td></tr>
+    <tr><td>Değişken giderler</td><td class="n">${fmt(dg)}</td><td class="n">${pct(dg/genel)}</td></tr>
+    <tr class="tot"><td>Toplam</td><td class="n">${fmt(sb+dg)}</td><td></td></tr>
+    <tr><td>Aylık ortalama sabit gider</td><td class="n">${fmt(sb/Math.max(1,new Set(yg.map(g=>g.tarih.slice(0,7))).size))}</td><td></td></tr></table>`;
+  $('gtGrup').innerHTML = `<h3 style="margin-top:0">Grup Özeti</h3><table>${Object.entries(GRUPLAR).map(([g,G])=>{const v=sum(yg.filter(x=>kalem(x.kalemId)?.grup===g).map(val)); return `<tr><td>${tag(g)} ${G.kisa}</td><td class="n">${fmt(v)}</td><td class="n">${pct(v/genel)}</td></tr>`}).join('')}
+    <tr class="tot"><td>KDV toplamı (indirilecek)</td><td class="n">${fmt(sum(yg.map(kdvTutar)))}</td><td></td></tr></table>`;
+}
+
+/* ================== MALİYET TABLOSU ================== */
+function maliyetHTML(p, ids){
+  const R = hesapla(p);
+  const r = (ad, v, cls='', ind=false) => `<tr class="${cls}"><td class="${ind?'ind':''}">${ad}</td><td class="n ${sinif(v)}">${fmt(v)}</td></tr>`;
+  const kalemSatir = g => S.kalemler.filter(k=>k.grup===g && R.kalem[k.id]).map(k=>`<tr><td class="ind muted">${esc(k.ad)}</td><td class="n muted">${fmt(R.kalem[k.id])}</td></tr>`).join('');
+  let uyari = uyarilar(p);
+  if(!S.urunler.length) uyari += `<div class="note">Ürün bazında birim maliyet için Ürünler &amp; Üretim sekmesinden ürün ekleyin.</div>`;
+  const U = S.urunler.map(u=>({u, x:R.urun[u.id]}));
+  return `${uyari}
+  <div class="grid two">
+  <div class="card tw">
+    <h3 style="margin-top:0">Satılan Mamul Maliyeti ve Gelir Tablosu — ${donemAd(p)}</h3>
+    <table ${ids?'id="tblSMM"':''}>
+      ${r('A. Direkt İlk Madde ve Malzeme Giderleri (710)', R.grup.DIMM, 'grp')}${kalemSatir('DIMM')}
+      ${r('B. Direkt İşçilik Giderleri (720)', R.grup.DIIG, 'grp')}${kalemSatir('DIIG')}
+      ${r('C. Genel Üretim Giderleri (730)', R.grup.GUG, 'grp')}${kalemSatir('GUG')}
+      ${r('DÖNEM ÜRETİM MALİYETİ (A+B+C)', R.uretimMal, 'sub')}
+      ${r('+ Dönem başı mamul stoku', R.stok.basi||0, '', true)}
+      ${r('− Dönem sonu mamul stoku', -(R.stok.sonu||0), '', true)}
+      ${r('SATILAN MAMUL MALİYETİ (SMM)', R.smm, 'tot')}
+      <tr><td colspan="2" style="border:0;height:8px"></td></tr>
+      ${r('Net satışlar', R.netSatis, 'sub')}
+      ${r('− Satılan mamul maliyeti', -R.smm, '', true)}
+      ${r('BRÜT SATIŞ KÂRI / ZARARI', R.brutKar, 'sub')}
+      ${r('− Ar-Ge giderleri (750)', -R.grup.ARGE, '', true)}
+      ${r('− Pazarlama, satış ve dağıtım giderleri (760)', -R.grup.PAZ, '', true)}
+      ${r('− Genel yönetim giderleri (770)', -R.grup.GYG, '', true)}
+      ${r('FAALİYET KÂRI / ZARARI', R.faalKar, 'sub')}
+      ${r('− Finansman giderleri (780)', -R.grup.FIN, '', true)}
+      ${r('DÖNEM KÂRI / ZARARI (vergi öncesi)', R.netKar, 'tot big')}
+    </table>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Maliyet Yapısı</h3>
+    ${(()=>{const t=R.toplamGider||1; return Object.entries(GRUPLAR).map(([g,G])=>`<div class="hb"><span>${G.kod} ${G.kisa}</span><div class="t"><i style="width:${R.grup[g]/t*100}%;background:${G.renk}"></i></div><b style="text-align:right">${pct(R.grup[g]/t)}</b></div>`).join('')})()}
+    <table style="margin-top:14px">
+      <tr><td>Toplam gider</td><td class="n"><b>${fmt(R.toplamGider)}</b></td></tr>
+      <tr><td>Üretim maliyetinin toplam gidere oranı</td><td class="n">${pct(R.uretimMal/(R.toplamGider||1))}</td></tr>
+      <tr><td>Toplam üretim miktarı</td><td class="n">${NUM.format(R.toplamUretim)}</td></tr>
+      <tr><td>Brüt kâr marjı</td><td class="n">${R.netSatis?pct(R.brutKar/R.netSatis):'—'}</td></tr>
+      <tr><td>Net kâr marjı</td><td class="n ${sinif(R.netKar)}">${R.netSatis?pct(R.netKar/R.netSatis):'—'}</td></tr>
+    </table>
+  </div>
+  </div>
+  <div class="card tw">
+    <h3 style="margin-top:0">Ürün Bazında Maliyet Tablosu — ${donemAd(p)}</h3>
+    <table ${ids?'id="tblUrunMal"':''}><thead><tr><th>Ürün</th><th class="n">Üretilen</th><th class="n">Direkt Malzeme</th><th class="n">Direkt İşçilik</th><th class="n">Genel Üretim</th>
+      <th class="n">Toplam Üretim Maliyeti</th><th class="n">Birim Üretim Maliyeti</th><th class="n">Faaliyet Gideri Payı</th><th class="n">Tam Birim Maliyet</th>
+      <th class="n">Birim Satış Fiyatı</th><th class="n">Birim Kâr</th><th class="n">Kâr Marjı</th></tr></thead><tbody>
+      ${U.map(({u,x})=>`<tr><td><b>${esc(u.ad)}</b></td><td class="n">${NUM.format(x.uretilen)} ${esc(u.birim)}</td><td class="n">${fmt(x.DIMM)}</td><td class="n">${fmt(x.DIIG)}</td><td class="n">${fmt(x.GUG)}</td>
+        <td class="n"><b>${fmt(x.uretimMal)}</b></td><td class="n">${x.uretilen?fmt(x.birim):'—'}</td><td class="n">${fmt(x.faaliyet)}</td><td class="n"><b>${x.uretilen||x.satilan?fmt(x.tamBirim):'—'}</b></td>
+        <td class="n">${x.fiyat?fmt(x.fiyat):'—'}</td><td class="n ${sinif(x.birimKar)}">${x.fiyat?fmt(x.birimKar):'—'}</td><td class="n ${sinif(x.marj)}">${pct(x.marj)}</td></tr>`).join('')
+        || '<tr><td colspan="12" class="muted">Ürün yok.</td></tr>'}
+      </tbody>
+      ${U.length?`<tfoot><tr class="tot"><td>TOPLAM</td><td class="n">${NUM.format(R.toplamUretim)}</td>${['DIMM','DIIG','GUG','uretimMal'].map(a=>`<td class="n">${fmt(sum(U.map(o=>o.x[a])))}</td>`).join('')}<td></td><td class="n">${fmt(sum(U.map(o=>o.x.faaliyet)))}</td><td colspan="4"></td></tr></tfoot>`:''}
+    </table>
+    <p class="muted" style="font-size:12px">Ürüne doğrudan atanmamış üretim giderleri, üretim miktarı × maliyet katsayısı oranında dağıtılır. Birim üretim maliyeti = Toplam üretim maliyeti ÷ Üretilen miktar. Tam birim maliyet = Birim üretim maliyeti + (Faaliyet gideri payı ÷ Satılan miktar). Kâr marjı satış fiyatı üzerinden hesaplanır.</p>
+  </div>`;
+}
+function renderMaliyet(){ $('mIcerik').innerHTML = `<div class="muted" style="margin-bottom:8px">Görünüm: <b>${gorAd()}</b>${!['TUM','TRY'].includes(gor())?' · mamul stokları TL olduğu için bu görünümde dahil edilmez':''}</div>` + maliyetHTML(UI.m, true); }
+
+/* ================== TOPLU GİRİŞ / EXCEL ================== */
+const norm = s => String(s ?? '').trim().toLocaleLowerCase('tr').replace(/\s+/g,' ');
+function sayiCoz(v){
+  if(typeof v === 'number') return v;
+  let s = String(v ?? '').replace(/[₺$€£\s%]|TL|USD|EUR|GBP/gi,'');
+  if(s === '') return NaN;
+  if(s.includes('.') && s.includes(',')) s = s.lastIndexOf(',') > s.lastIndexOf('.') ? s.replace(/\./g,'').replace(',','.') : s.replace(/,/g,'');
+  else if(s.includes(',')) s = s.replace(',','.');
+  else if(/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g,'');   // 1.250.000 gibi
+  return Number(s);
+}
+function tarihCoz(v){
+  const s = String(v ?? '').trim(); let y, m, d;
+  if(/^\d{4,5}(\.\d+)?$/.test(s) && +s > 20000){ const t = new Date(Math.round((+s - 25569) * 86400000)); y=t.getUTCFullYear(); m=t.getUTCMonth()+1; d=t.getUTCDate(); }
+  else if(/^\d{4}-\d{1,2}-\d{1,2}/.test(s)) [y,m,d] = s.slice(0,10).split('-').map(Number);
+  else if(/^\d{1,2}[./-]\d{1,2}[./-]\d{2,4}$/.test(s)){ [d,m,y] = s.split(/[./-]/).map(Number); if(y < 100) y += 2000; }
+  else return null;
+  if(!(m>=1 && m<=12 && d>=1 && d<=31)) return null;
+  return `${y}-${pad(m)}-${pad(d)}`;
+}
+const kalemBul = ad => S.kalemler.find(k=>norm(k.ad)===norm(ad));
+const urunBul = ad => S.urunler.find(u=>norm(u.ad)===norm(ad) || (u.kod && norm(u.kod)===norm(ad)));
+const grupBul = v => { const n = norm(v); return Object.keys(GRUPLAR).find(g=>GRUPLAR[g].kod===n || g.toLowerCase()===n || norm(GRUPLAR[g].kisa)===n || norm(GRUPLAR[g].ad)===n || n.startsWith(GRUPLAR[g].kod)); };
+
+const TOPLU = {
+  urun: {
+    baslik:'Ürünler', dosya:'urunler',
+    kol:[{k:'ad',l:'Ürün adı',z:1,w:230,dl:'dlUrun'},{k:'birim',l:'Birim',w:90},{k:'kod',l:'Stok kodu',w:110},{k:'katsayi',l:'Maliyet katsayısı',w:120}],
+    aciklama:'Aynı adda ürün varsa bilgileri güncellenir, yoksa yeni ürün eklenir.',
+    ornek:()=>[['Ahşap Masa','adet','M-01',3],['Ahşap Sandalye','adet','S-01',1]],
+    dogrula:o=>{
+      if(!o.ad) return 'Ürün adı boş.';
+      const kat = o.katsayi==='' ? 1 : sayiCoz(o.katsayi);
+      if(!(kat > 0)) return 'Maliyet katsayısı geçersiz.';
+      return {ad:o.ad, birim:o.birim||'adet', kod:o.kod, katsayi:kat};
+    },
+    ekle:list=>{ let y=0, g=0; list.forEach(r=>{ const u = urunBul(r.ad); if(u){ Object.assign(u, r); g++; } else { S.urunler.push({id:uid(), ...r}); y++; } }); return `${y} ürün eklendi, ${g} ürün güncellendi.`; }
+  },
+  kalem: {
+    baslik:'Mal Maliyet Kalemleri', dosya:'mal-maliyet-kalemleri',
+    kol:[{k:'ad',l:'Kalem adı',z:1,w:240,dl:'dlKalem'},{k:'grup',l:'Grup kodu',z:1,w:110,dl:'dlGrup',ph:'710…780'},{k:'tip',l:'Davranış',w:110,dl:'dlTip',ph:'Sabit/Değişken'}],
+    aciklama:'Grup kodu: 710 Direkt Malzeme · 720 Direkt İşçilik · 730 Genel Üretim · 750 Ar-Ge · 760 Pazarlama · 770 Genel Yönetim · 780 Finansman. Aynı adda kalem varsa güncellenir.',
+    ornek:()=>[['Boya ve vernik','710','Değişken'],['Forklift kirası','730','Sabit']],
+    dogrula:o=>{
+      if(!o.ad) return 'Kalem adı boş.';
+      const g = grupBul(o.grup); if(!g) return `Grup kodu "${o.grup}" tanınmadı (710, 720, 730, 750, 760, 770, 780 olmalı).`;
+      return {ad:o.ad, grup:g, tip:/^s/i.test(o.tip) ? 'sabit' : 'degisken'};
+    },
+    ekle:list=>{ let y=0, g=0; list.forEach(r=>{ const k = kalemBul(r.ad); if(k){ Object.assign(k, r); g++; } else { S.kalemler.push({id:uid(), ...r}); y++; } }); return `${y} mal maliyet kalemi eklendi, ${g} kalem güncellendi.`; }
+  },
+  gider: {
+    baslik:'Gider Kayıtları', dosya:'gider-kayitlari',
+    kol:[{k:'tarih',l:'Tarih',z:1,w:105,ph:'gg.aa.yyyy'},{k:'belge',l:'Belge no',w:95},{k:'kalem',l:'Mal maliyet kalemi',z:1,w:200,dl:'dlKalem'},{k:'aciklama',l:'Açıklama',w:200},
+         {k:'tutar',l:'Tutar',z:1,w:105},{k:'para',l:'Para birimi',w:80,dl:'dlPara',ph:'TL'},{k:'kur',l:'Kur (boşsa TCMB)',w:110},
+         {k:'kdv',l:'KDV %',w:60,ph:'20'},{k:'odeme',l:'Ödeme',w:95,dl:'dlOdeme',ph:'Ödendi'},{k:'urun',l:'Ürün (isteğe bağlı)',w:150,dl:'dlUrun'}],
+    aciklama:'Kayıtlar yalnızca açık dönemlere girilebilir. Kalem ve ürün adları programdakiyle aynı yazılmalıdır (yazarken liste çıkar). Para birimi: TL, USD, EUR, GBP (boşsa TL). Dövizli satırlarda kur boş bırakılırsa işlem tarihinin TCMB döviz satış kuru kullanılır.',
+    ekstra:'<label class="b"><input type="checkbox" name="dahil"> Tutarlar KDV dahil</label>',
+    ornek:()=>{ const t = tarihTR(acik(S.aktif) ? S.aktif+'-05' : bugun()); const k = S.kalemler;
+      return [[t,'F12345',k.find(x=>x.grup==='DIMM')?.ad||'',`Hammadde faturası`,'125.000,00','TL','',20,'Ödendi',''],
+              [t,'IMP-7',k.find(x=>x.grup==='DIMM')?.ad||'','İthal hammadde','2.500,00','USD','',20,'Bekliyor',''],
+              [t,'',k.find(x=>x.grup==='GYG')?.ad||'','Aylık gider','25.000,00','TL','',20,'Bekliyor','']]; },
+    on:()=>{ if(!S.donemler.some(d=>d.durum==='acik')){ alert('Açık dönem yok. Önce dönem açın.'); return false; } },
+    dogrula:(o,f)=>{
+      const tarih = tarihCoz(o.tarih); if(!tarih) return `Tarih "${o.tarih}" geçersiz (gg.aa.yyyy yazın).`;
+      if(!acik(tarih)) return `${tarihTR(tarih)} tarihi açık bir döneme ait değil.`;
+      const k = kalemBul(o.kalem); if(!k) return `"${o.kalem}" adlı mal maliyet kalemi bulunamadı.`;
+      let tutar = sayiCoz(o.tutar); if(!(tutar > 0)) return `Tutar "${o.tutar}" geçersiz.`;
+      const kdv = o.kdv==='' ? 20 : sayiCoz(o.kdv); if(!(kdv >= 0 && kdv <= 100)) return `KDV oranı "${o.kdv}" geçersiz.`;
+      let urunId = ''; if(o.urun){ const u = urunBul(o.urun); if(!u) return `"${o.urun}" adlı ürün bulunamadı.`; urunId = u.id; }
+      const para = paraBul(o.para); if(!para) return `Para birimi "${o.para}" tanınmadı (TL, USD, EUR, GBP yazın).`;
+      let kur = 1, kurTarihi = '', kurKaynak = '';
+      if(para !== 'TRY'){
+        const tk = kurBul(tarih, para);
+        if(o.kur){ kur = sayiCoz(o.kur); if(!(kur > 0)) return `Kur "${o.kur}" geçersiz.`; kurKaynak = tk && Math.abs(tk.kur-kur)<1e-9 ? 'TCMB' : 'Elle'; kurTarihi = tk?.tarih || tarih; }
+        else if(tk){ kur = tk.kur; kurTarihi = tk.tarih; kurKaynak = 'TCMB'; }
+        else return `${tarihTR(tarih)} için TCMB ${para} kuru bulunamadı; "Kur" sütununa yazın.`;
+      }
+      if(f.dahil) tutar = tutar / (1 + kdv/100);
+      const odeme = /^b|^ö?denmedi|^odenmedi/i.test(o.odeme) ? 'bekliyor' : 'odendi';
+      return {id:uid(), tarih, belgeNo:o.belge, kalemId:k.id, aciklama:o.aciklama, tutar:Math.round(tutar*100)/100, kdv, odeme, odemeTarihi:odeme==='odendi'?tarih:'', urunId, para, kur, kurTarihi, kurKaynak};
+    },
+    ekle:list=>{ S.giderler.push(...list); return `${list.length} gider kaydı eklendi (TL karşılığı toplam ${fmtP(sum(list.map(tlKarsilik)))}).`; }
+  },
+  uretim: {
+    baslik:'Üretim ve Satış Bilgileri', dosya:'uretim',
+    kol:[{k:'urun',l:'Ürün adı / kodu',z:1,w:230,dl:'dlUrun'},{k:'uretilen',l:'Üretilen miktar',w:120},{k:'satilan',l:'Satılan miktar',w:120},{k:'fiyat',l:'Birim satış fiyatı',w:130},
+         {k:'para',l:'Para birimi',w:80,dl:'dlPara',ph:'TL'},{k:'kur',l:'Kur (boşsa TCMB ay sonu)',w:130}],
+    aciklama:'',
+    ornek:()=>S.urunler.map(u=>[u.ad,'','','','TL','']),
+    on:()=>{ if(!acik(UI.u)){ alert(`${donemAd(UI.u)} dönemi kapalı; üretim bilgisi girilemez.`); return false; }
+             TOPLU.uretim.aciklama = `Bilgiler <b>${donemAd(UI.u)}</b> dönemine yazılır. Boş bırakılan hücreler mevcut değeri değiştirmez.`; },
+    dogrula:o=>{
+      const u = urunBul(o.urun); if(!u) return `"${o.urun}" adlı ürün bulunamadı (önce ürünü ekleyin).`;
+      const r = {id:u.id};
+      for(const a of ['uretilen','satilan','fiyat']){ if(o[a]==='') continue; const v = sayiCoz(o[a]); if(!(v >= 0)) return `${a==='fiyat'?'Fiyat':'Miktar'} "${o[a]}" geçersiz.`; r[a] = v; }
+      if(o.para){ const p = paraBul(o.para); if(!p) return `Para birimi "${o.para}" tanınmadı (TL, USD, EUR, GBP).`; r.para = p; }
+      if(o.kur){ const v = sayiCoz(o.kur); if(!(v > 0)) return `Kur "${o.kur}" geçersiz.`; r.kur = v; }
+      return r;
+    },
+    ekle:list=>{ const p = UI.u; S.uretim[p] ||= {}; list.forEach(r=>{ const {id, ...d} = r; S.uretim[p][id] = {...(S.uretim[p][id]||{}), ...d}; }); return `${donemAd(p)} için ${list.length} ürünün üretim bilgisi kaydedildi.`; }
+  }
+};
+
+let XLSX_YUK = null;
+function xlsxYukle(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+  return XLSX_YUK ||= new Promise((ok, hata)=>{
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = () => ok(window.XLSX); s.onerror = () => { XLSX_YUK = null; hata(new Error('yok')); };
+    document.head.appendChild(s);
+  });
+}
+function csvCoz(text){
+  text = text.replace(/^﻿/, '');
+  const ilk = text.split(/\r?\n/)[0] || '';
+  const ayr = [';','\t',','].sort((a,b)=>ilk.split(b).length - ilk.split(a).length)[0];
+  const rows = []; let row = [], cell = '', q = false;
+  for(let i=0; i<text.length; i++){
+    const c = text[i];
+    if(q){ if(c === '"'){ if(text[i+1] === '"'){ cell += '"'; i++; } else q = false; } else cell += c; }
+    else if(c === '"') q = true;
+    else if(c === ayr){ row.push(cell); cell = ''; }
+    else if(c === '\n' || c === '\r'){ if(c === '\r' && text[i+1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  if(cell !== '' || row.length){ row.push(cell); rows.push(row); }
+  return rows;
+}
+async function dosyaOku(file){
+  if(/\.(csv|txt)$/i.test(file.name)) return csvCoz(await file.text());
+  const X = await xlsxYukle();
+  const wb = X.read(await file.arrayBuffer(), {type:'array'});
+  return X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true, defval:''});
+}
+async function sablonIndir(T){
+  const veri = [T.kol.map(c=>c.l + (c.z?' *':'')), ...T.ornek()];
+  try {
+    const X = await xlsxYukle();
+    const ws = X.utils.aoa_to_sheet(veri); ws['!cols'] = T.kol.map(c=>({wch:Math.round((c.w||110)/7)}));
+    const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, T.baslik.slice(0,30)); X.writeFile(wb, `${T.dosya}-sablon.xlsx`);
+  } catch(e){
+    indir('﻿' + veri.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n'), `${T.dosya}-sablon.csv`, 'text/csv;charset=utf-8');
+  }
+}
+function toplu(tip){
+  const T = TOPLU[tip];
+  if(T.on && T.on() === false) return;
+  const bos = () => T.kol.map(()=>'');
+  let rows = Array.from({length:10}, bos);
+  const baslikMi = r => r.some(v=>T.kol.some(c=>norm(String(v).replace('*',''))===norm(c.l)));
+  const dl = `<datalist id="dlKalem">${S.kalemler.map(k=>`<option value="${esc(k.ad)}">`).join('')}</datalist>
+    <datalist id="dlUrun">${S.urunler.map(u=>`<option value="${esc(u.ad)}">`).join('')}</datalist>
+    <datalist id="dlGrup">${Object.values(GRUPLAR).map(G=>`<option value="${G.kod}">${G.kisa}</option>`).join('')}</datalist>
+    <datalist id="dlOdeme"><option value="Ödendi"><option value="Bekliyor"></datalist>
+    <datalist id="dlTip"><option value="Sabit"><option value="Değişken"></datalist>
+    <datalist id="dlPara"><option value="TL"><option value="USD"><option value="EUR"><option value="GBP"></datalist>`;
+  dlg(`<h2>${T.baslik} — Toplu Giriş / Excel</h2>
+    <div class="note">${T.aciklama}<br>Üç yolla giriş yapabilirsiniz: <b>1)</b> tabloyu elle doldurun · <b>2)</b> Excel'de satırları seçip kopyalayın, aşağıdaki ilk hücreye tıklayıp <b>Ctrl+V</b> ile yapıştırın · <b>3)</b> Excel/CSV dosyası seçin. Kaydetmeden önce tabloda kontrol edip düzeltebilirsiniz. Boş satırlar atlanır.</div>
+    <div class="bar"><button type="button" class="b" id="tSablon">Şablon indir (Excel)</button>
+      <label class="b">Excel / CSV dosyası seç<input type="file" id="tDosya" accept=".xlsx,.xls,.csv,.txt" hidden></label>
+      <button type="button" class="b" id="tSatir">+10 satır</button><button type="button" class="b" id="tTemizle">Temizle</button>${T.ekstra||''}
+      <span class="sp"></span><span id="tSay" class="muted"></span></div>
+    <div id="tHata"></div>
+    <div class="tw" id="tGrid" style="max-height:52vh;overflow:auto"></div>${dl}`, f=>{
+      oku();
+      const dolu = rows.map((r,i)=>({r,i})).filter(x=>x.r.some(c=>String(c??'').trim()!==''));
+      if(!dolu.length){ alert('Tabloda kaydedilecek veri yok.'); return false; }
+      const hatalar = [], kayitlar = [];
+      dolu.forEach(({r,i})=>{ const o = {}; T.kol.forEach((c,j)=>o[c.k] = String(r[j]??'').trim());
+        const z = T.kol.find(c=>c.z && !o[c.k]);
+        const res = z ? `"${z.l}" boş olamaz.` : T.dogrula(o, f);
+        if(typeof res === 'string') hatalar.push({i, msg:res}); else kayitlar.push(res); });
+      if(hatalar.length){
+        $('tHata').innerHTML = `<div class="note w"><b>${hatalar.length} satırda hata var, hiçbir kayıt yapılmadı.</b> Düzeltip tekrar kaydedin:<br>${hatalar.slice(0,12).map(h=>`Satır ${h.i+1}: ${esc(h.msg)}`).join('<br>')}${hatalar.length>12?'<br>…':''}</div>`;
+        $('tGrid').querySelectorAll('tr.err').forEach(t=>t.classList.remove('err'));
+        hatalar.forEach(h=>$('tGrid').querySelector(`tr[data-r="${h.i}"]`)?.classList.add('err'));
+        return false;
+      }
+      const msg = T.ekle(kayitlar, f);
+      kaydet(); yenile(); bildir(msg);
+    }, 'Hepsini Kaydet', true);
+
+  const say = () => $('tSay').textContent = `${rows.filter(r=>r.some(c=>String(c??'').trim()!=='')).length} dolu satır`;
+  function oku(){ $('tGrid').querySelectorAll('.gc').forEach(inp=>rows[+inp.dataset.r][+inp.dataset.c] = inp.value); }
+  function ciz(){
+    $('tGrid').innerHTML = `<table class="grid-t"><thead><tr><th>#</th>${T.kol.map(c=>`<th>${c.l}${c.z?' *':''}</th>`).join('')}<th></th></tr></thead><tbody>
+      ${rows.map((r,i)=>`<tr data-r="${i}"><td class="muted">${i+1}</td>${T.kol.map((c,j)=>`<td><input class="gc" data-r="${i}" data-c="${j}" value="${esc(r[j]??'')}" ${c.dl?`list="${c.dl}"`:''} placeholder="${c.ph||''}" style="width:${c.w||110}px" autocomplete="off"></td>`).join('')}
+      <td><button type="button" class="b mini d" data-sil="${i}" title="Satırı sil">×</button></td></tr>`).join('')}</tbody></table>`;
+    say();
+  }
+  function doldur(veri){
+    veri = veri.map(r=>T.kol.map((_,j)=>r[j] ?? '')).filter(r=>r.some(v=>String(v).trim()!==''));
+    if(veri.length && baslikMi(veri[0])) veri.shift();
+    return veri;
+  }
+  ciz();
+  $('tGrid').oninput = say;
+  $('tGrid').onclick = e => { const b = e.target.closest('[data-sil]'); if(!b) return; oku(); rows.splice(+b.dataset.sil,1); if(!rows.length) rows.push(bos()); ciz(); };
+  $('tGrid').onpaste = e => {
+    const t = e.target; if(!t.classList.contains('gc')) return;
+    const txt = e.clipboardData.getData('text'); if(!/[\t\n]/.test(txt.trim())) return;
+    e.preventDefault(); oku();
+    let satirlar = txt.replace(/\r/g,'').split('\n'); if(satirlar[satirlar.length-1]==='') satirlar.pop();
+    satirlar = satirlar.map(s=>s.split('\t'));
+    if(satirlar.length && baslikMi(satirlar[0])) satirlar.shift();
+    const r0 = +t.dataset.r, c0 = +t.dataset.c;
+    satirlar.forEach((h,di)=>{ while(rows.length <= r0+di) rows.push(bos()); h.forEach((v,dj)=>{ if(c0+dj < T.kol.length) rows[r0+di][c0+dj] = v.trim(); }); });
+    ciz();
+  };
+  $('tSatir').onclick = () => { oku(); for(let i=0;i<10;i++) rows.push(bos()); ciz(); };
+  $('tTemizle').onclick = () => { rows = Array.from({length:10}, bos); $('tHata').innerHTML=''; ciz(); };
+  $('tSablon').onclick = () => sablonIndir(T);
+  $('tDosya').onchange = async e => {
+    const file = e.target.files[0]; if(!file) return;
+    try {
+      const veri = doldur(await dosyaOku(file));
+      if(!veri.length) return alert('Dosyada veri bulunamadı.');
+      rows = veri.map(r=>r.map(v=>v===null||v===undefined?'':String(v))); $('tHata').innerHTML = '';
+      ciz(); bildir(`${veri.length} satır dosyadan okundu. Kontrol edip "Hepsini Kaydet"e basın.`);
+    } catch(err){
+      alert('Excel dosyası okunamadı. .xlsx okumak için internet bağlantısı gerekir.\n\nAlternatif: Excel\'de dosyayı "CSV (noktalı virgülle ayrılmış)" olarak kaydedip yükleyin ya da hücreleri kopyalayıp tabloya yapıştırın.');
+    }
+    e.target.value = '';
+  };
+}
+
+/* ================== DİYALOG ================== */
+function dlg(html, onOk, okText='Kaydet', genis=false){
+  const f = $('dlgForm');
+  $('dlg').classList.toggle('genis', genis);
+  f.innerHTML = html + `<div class="acts"><button class="b" value="iptal" formnovalidate>Vazgeç</button><button class="b p" value="ok">${okText}</button></div>`;
+  f.onkeydown = e => {   // Enter: normal formda kaydet, toplu tabloda alt satıra geç
+    if(e.key !== 'Enter' || e.target.tagName !== 'INPUT' || e.target.type === 'checkbox') return;
+    e.preventDefault();
+    if(e.target.classList.contains('gc')){
+      const alt = f.querySelector(`.gc[data-r="${+e.target.dataset.r+1}"][data-c="${e.target.dataset.c}"]`); if(alt) alt.focus();
+    } else f.requestSubmit(f.querySelector('button[value=ok]'));
+  };
+  f.onsubmit = e => {
+    if(e.submitter?.value !== 'ok') return;
+    const data = {}; new FormData(f).forEach((v,k)=>data[k]=v);
+    f.querySelectorAll('input[type=checkbox]').forEach(c=>data[c.name]=c.checked);
+    if(onOk(data) === false) e.preventDefault();
+  };
+  $('dlg').showModal();
+  f.querySelector('input:not([type=checkbox]),select')?.focus();
+}
+
+/* ================== DIŞA AKTAR / YEDEK ================== */
+function csv(tableId, ad){
+  const t = $(tableId); if(!t) return alert('Aktarılacak tablo yok.');
+  const rows = [...t.querySelectorAll('tr')].map(tr=>[...tr.children].filter(c=>!c.classList.contains('no-print'))
+    .map(c=>'"'+c.innerText.replace(/\s+/g,' ').trim().replace(/"/g,'""')+'"').join(';'));
+  indir('﻿'+rows.join('\r\n'), `${ad}.csv`, 'text/csv;charset=utf-8');
+}
+function indir(icerik, ad, tip){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([icerik],{type:tip})); a.download = ad; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function yazdir(){ $('printHead').innerHTML = `<b>${esc(S.firma.ad)}</b> ${S.firma.vkn?' — '+esc(S.firma.vkn):''}<br><span class="muted">Rapor tarihi: ${new Date().toLocaleDateString('tr-TR')}</span>`; window.print(); }
+function yedekAl(){ indir(JSON.stringify(S,null,1), `on-muhasebe-yedek-${bugun()}.json`, 'application/json'); }
+function yedekYukle(inp){
+  const file = inp.files[0]; if(!file) return;
+  const r = new FileReader();
+  r.onload = () => { try { const d = JSON.parse(r.result); if(!d.kalemler || !d.giderler) throw 0;
+      if(confirm('Mevcut verilerin yerine yedek yüklenecek. Emin misiniz?')){ S = d; normalize(); kaydet(); yenile(); alert('Yedek yüklendi.'); }
+    } catch(e){ alert('Geçersiz yedek dosyası.'); } inp.value=''; };
+  r.readAsText(file);
+}
+function firmaKaydet(){ S.firma = {ad:$('aAd').value.trim()||'Firmam', vkn:$('aVkn').value.trim(), adres:$('aAdres').value.trim()}; kaydet(); yenile(); alert('Kaydedildi.'); }
+function hepsiniSil(){ if(confirm('TÜM veriler silinecek ve geri alınamaz. Önce yedek almanız önerilir. Devam edilsin mi?')){ S = yeniVeri(); normalize(); kaydet(); yenile(); } }
+
+function demoYukle(){
+  if(S.giderler.length && !confirm('Örnek veriler mevcut verilere eklenecek. Devam?')) return;
+  const y = new Date().getFullYear(), sonAy = new Date().getMonth()+1;
+  if(S.donemler.some(d=>d.kod.startsWith(y) && d.durum==='kapali')) return alert('Bu yılda kapalı dönemler var; örnek veri yalnızca boş/açık dönemlere yüklenebilir.');
+  let seed = 42; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+  if(!S.urunler.length) S.urunler.push({id:uid(),ad:'Ahşap Masa',birim:'adet',kod:'M-01',katsayi:3},{id:uid(),ad:'Ahşap Sandalye',birim:'adet',kod:'S-01',katsayi:1},{id:uid(),ad:'Kitaplık',birim:'adet',kod:'K-01',katsayi:4});
+  const baz = {'Hammadde':420000,'Yardımcı malzeme':38000,'Ambalaj malzemesi':22000,'Üretim işçi ücretleri':260000,'Üretim işçi SGK primi':62000,
+    'Fabrika kirası':85000,'Elektrik':41000,'Doğalgaz':18000,'Su':4500,'Makine bakım-onarım':12000,'Amortisman (üretim)':30000,'Usta/ustabaşı maaşı':55000,
+    'Ar-Ge harcamaları':8000,'Nakliye / sevkiyat':27000,'Reklam ve tanıtım':20000,'Satış personeli maaşı':48000,'Satış komisyonu':15000,
+    'Ofis kirası':25000,'İdari personel maaşı':70000,'Mali müşavir ücreti':9000,'Telefon / internet':3500,'Kırtasiye / ofis':2500,'Sigorta':6000,'Araç yakıt':11000,
+    'Banka komisyonu':1800,'Kredi faizi':22000};
+  for(let m=1; m<=sonAy; m++){
+    const ay = `${y}-${pad(m)}`, kat = 0.9 + rnd()*0.25;
+    donemEkle(ay);
+    S.kalemler.forEach(k=>{ const b = baz[k.ad]; if(!b) return;
+      const t = Math.round(b * (k.tip==='sabit' ? 1 : kat*(0.92+rnd()*0.16)));
+      const maasli = /ücret|maaş|SGK|Amortisman|faiz/i.test(k.ad);
+      const bek = m===sonAy && rnd()<0.4;
+      const tarih = `${ay}-${pad(1+Math.floor(rnd()*27))}`;
+      // Örnek: hammaddenin %30'u USD, ambalaj EUR ile ithal
+      const para = k.ad==='Hammadde' ? 'USD' : k.ad==='Ambalaj malzemesi' ? 'EUR' : 'TRY';
+      let tutar = t, kur = 1, kurTarihi = '', kurKaynak = '';
+      if(para !== 'TRY'){
+        const tk = kurBul(tarih, para);
+        kur = tk ? tk.kur : (para==='USD' ? 36 + m*0.9 : 39 + m);   // kur dosyası yoksa yaklaşık değer
+        kurTarihi = tk?.tarih || tarih; kurKaynak = tk ? 'TCMB' : 'Elle';
+        tutar = Math.round((para==='USD' ? t*0.3 : t) / kur * 100) / 100;
+        if(para==='USD') S.giderler.push({id:uid(), tarih, belgeNo:'F'+Math.floor(10000+rnd()*89999), kalemId:k.id, aciklama:k.ad+' (yerli) — '+AY_UZUN[m-1],
+          tutar:Math.round(t*0.7), kdv:20, odeme:'odendi', odemeTarihi:tarih, urunId:'', para:'TRY', kur:1});
+      }
+      S.giderler.push({id:uid(), tarih, belgeNo:maasli?'':'F'+Math.floor(10000+rnd()*89999),
+        kalemId:k.id, aciklama:k.ad+(para!=='TRY'?' (ithal)':'')+' — '+AY_UZUN[m-1], tutar, kdv:maasli?0:(/^Su$/.test(k.ad)?10:20), odeme:bek?'bekliyor':'odendi', odemeTarihi:bek?'':tarih, urunId:'',
+        para, kur, kurTarihi, kurKaynak});
+    });
+    const [a,b,c] = S.urunler;
+    S.uretim[ay] = {
+      [a.id]:{uretilen:Math.round(220*kat), satilan:Math.round(205*kat), fiyat:4200},
+      [b.id]:{uretilen:Math.round(650*kat), satilan:Math.round(630*kat), fiyat:1350},
+      ...(c?{[c.id]:{uretilen:Math.round(90*kat), satilan:Math.round(80*kat), fiyat:135, para:'EUR'}}:{})   // kitaplık ihracatı EUR
+    };
+    S.stok[ay] = {basi: m===1?180000:S.stok[`${y}-${pad(m-1)}`].sonu, sonu: Math.round(150000+rnd()*80000)};
+  }
+  kaydet(); aktifYap(`${y}-${pad(sonAy)}`); alert('Örnek veriler yüklendi.');
+}
+
+/* ================== GENEL ================== */
+let aktifTab = 'panel';
+function sekmeyeGit(tab){
+  aktifTab = tab;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active', x.dataset.tab===tab));
+  document.querySelectorAll('main section').forEach(s=>s.classList.toggle('active', s.id===tab));
+  yenile();
+}
+function yenile(){
+  $('firmaAd').textContent = S.firma.ad + (S.firma.vkn ? ' · ' + S.firma.vkn : '');
+  document.title = 'Ön Muhasebe — ' + S.firma.ad;
+  $('aktifSec').innerHTML = donemOptions(S.aktif, {yil:false});
+  $('paraSec').innerHTML = Object.entries(GORUNUM).map(([k,a])=>`<option value="${k}" ${k===gor()?'selected':''}>${a}</option>`).join('');
+  $('kurGunu').value = S.ayar.kurGunu;
+  { const gunler = Object.keys(KURLAR).sort(), son = gunler[gunler.length-1];
+    $('kurBilgi').innerHTML = son
+      ? `<div class="note">TCMB kurları yüklü: ${gunler.length} iş günü (${tarihTR(gunler[0])} – ${tarihTR(son)})${KUR_GUNCEL?' · güncelleme: '+esc(KUR_GUNCEL):''}.<br>
+         Son ilan (${tarihTR(son)}) döviz satış: ${['USD','EUR','GBP'].map(p=>`<b>${p}</b> ${KURLAR[son][p]?KURF.format(KURLAR[son][p]):'—'}`).join(' · ')}</div>`
+      : `<div class="note w">TCMB kurları henüz yüklenmedi. Program internetten açıldığında kurlar otomatik gelir; aksi halde dövizli kayıtlarda kuru elle girebilirsiniz.</div>`; }
+  { const ay = [...yillar()].reverse().find(x=>!yilKapali(x));
+    $('ttYillik').textContent = ay ? `⚡ Yıllık Devir ${ay} → ${+ay+1}` : '⚡ Yıllık Devir'; }
+  // seçimler geçersizse çalışma dönemine dön
+  const gecerli = (v, bosOlur) => (bosOlur && v==='') || donem(v) || (v.length===4 && yillar().includes(v));
+  if(!gecerli(UI.f, true)) UI.f = S.aktif;
+  if(!gecerli(UI.m)) UI.m = S.aktif;
+  if(!donem(UI.u)) UI.u = S.aktif;
+  if(!yillar().includes(UI.gy)) UI.gy = S.aktif.slice(0,4);
+  $('fDonem').innerHTML = donemOptions(UI.f, {tumu:true});
+  $('mDonem').innerHTML = donemOptions(UI.m);
+  $('uDonem').innerHTML = donemOptions(UI.u, {yil:false});
+  $('gtYil').innerHTML = yillar().map(v=>`<option ${v===UI.gy?'selected':''}>${v}</option>`).join('');
+  const gv = $('fGrup').value, kv = $('fKalem').value;
+  $('fGrup').innerHTML = '<option value="">Tüm gruplar</option>' + Object.entries(GRUPLAR).map(([g,G])=>`<option value="${g}" ${g===gv?'selected':''}>${G.kod} ${G.kisa}</option>`).join('');
+  $('fKalem').innerHTML = '<option value="">Tüm mal maliyet kalemleri</option>' + kalemOptions(kv);
+  $('aAd').value = S.firma.ad; $('aVkn').value = S.firma.vkn; $('aAdres').value = S.firma.adres;
+  ({panel:renderPanel, donemler:renderDonemler, giderler:renderGiderler, kalemler:renderKalemler, uretim:renderUretim, gidertablo:renderGiderTablo, maliyet:renderMaliyet}[aktifTab] || (()=>{}))();
+}
+$('nav').onclick = e => { const b = e.target.closest('button'); if(b) sekmeyeGit(b.dataset.tab); };
+$('aktifSec').onchange = e => aktifYap(e.target.value);
+function gorunumSec(p){ S.gorunum = p; kaydet(); yenile(); }
+$('paraSec').onchange = e => gorunumSec(e.target.value);
+$('kurGunu').onchange = e => { S.ayar.kurGunu = e.target.value; kaydet(); bildir('Kur ayarı kaydedildi. Mevcut kayıtlara uygulamak için "TCMB kurunu uygula" düğmesine basın.'); };
+/* Açık dönemlerdeki dövizli kayıtların kurunu TCMB'ye göre yeniden hesapla (elle girilen kurlar korunur) */
+function kurlariUygula(){
+  const list = S.giderler.filter(g=>paraOf(g)!=='TRY' && acik(g.tarih) && g.kurKaynak!=='Elle');
+  if(!list.length) return alert('Açık dönemlerde TCMB kuruyla güncellenecek dövizli kayıt yok.');
+  if(!confirm(`Açık dönemlerdeki ${list.length} dövizli kaydın kuru TCMB döviz satış kuruyla yeniden hesaplanacak (elle girilmiş kurlar değişmez). Devam?`)) return;
+  let n = 0, yok = 0;
+  list.forEach(g=>{ const k = kurBul(g.tarih, g.para); if(k){ g.kur = k.kur; g.kurTarihi = k.tarih; g.kurKaynak = 'TCMB'; n++; } else yok++; });
+  kaydet(); yenile(); alert(`${n} kayıt güncellendi.${yok?` ${yok} kaydın tarihi için TCMB kuru bulunamadı.`:''}`);
+}
+$('fDonem').onchange = e => { UI.f = e.target.value; renderGiderler(); };
+['fGrup','fKalem','fOdeme'].forEach(id=>$(id).onchange = renderGiderler);
+$('fAra').oninput = renderGiderler;
+$('uDonem').onchange = e => { UI.u = e.target.value; renderUretim(); };
+$('stBasi').onchange = $('stSonu').onchange = stokSet;
+$('gtYil').onchange = e => { UI.gy = e.target.value; renderGiderTablo(); };
+$('gtKdv').onchange = renderGiderTablo;
+$('mDonem').onchange = e => { UI.m = e.target.value; renderMaliyet(); };
+
+yukle(); kurlarYukle(); yenile();
+kurlarGetir(true).then(n=>{ if(n) yenile(); });   // internetten (GitHub Pages) açıldıysa güncel TCMB kurlarını al
+</script>
+</body>
+</html>
