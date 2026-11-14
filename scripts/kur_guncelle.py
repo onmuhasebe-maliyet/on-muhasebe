@@ -95,6 +95,10 @@ def main():
     if hatali:
         print(f"{len(hatali)} gün alınamadı:", *hatali[:10], sep="\n  ")
 
+    if yeni == 0 and DOSYA.exists():
+        print(f"Yeni kur yok, toplam {len(mevcut)} gün. Son: {max(mevcut) if mevcut else '-'}")
+        return
+
     cikti = {
         "kaynak": "TCMB gösterge niteliğindeki döviz satış kurları (ForexSelling) - https://www.tcmb.gov.tr/kurlar/",
         "guncelleme": dt.datetime.now(TR).strftime("%Y-%m-%d %H:%M"),
